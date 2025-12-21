@@ -424,7 +424,7 @@ function App() {
   return (
     <div className="App">
       <nav className="navbar">
-        <div className="logo">ShoShop</div>
+        <div className="logo">ShoShop11</div>
         <div className="nav-actions">
           <button className="icon-btn" onClick={() => { setView('admin'); fetchOrders(); setAdminTab('orders'); }}>
             <ShieldCheck size={18} /> Seller
