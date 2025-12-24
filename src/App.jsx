@@ -245,13 +245,14 @@ function App() {
 
   // --- VIEWS ---
 
-  // 1. CART VIEW
+ // 1. CART VIEW
   if (view === 'cart') {
     return (
       <div className="modal-overlay">
         <div className="modal">
           <button className="close-btn" onClick={() => setView('shop')}><X size={20}/></button>
           <div className="modal-content-grid">
+            {/* LEFT SIDE: Cart Items */}
             <div className="modal-left" style={{ flexDirection: 'column', alignItems: 'stretch', padding: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2 style={{ margin: 0 }}>Your Cart</h2>
@@ -271,23 +272,52 @@ function App() {
               </div>
               <div className="total-row">Total: RM{cart.reduce((sum, i) => sum + i.price, 0).toFixed(2)}</div>
             </div>
+
+            {/* RIGHT SIDE: Checkout Form OR Login Prompt */}
             <div className="modal-right">
-              <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <h3>Shipping Details</h3>
-                <input
-                  name="email" className="input-field" placeholder="Email" required
-                  value={customerDetails.email}
-                  onChange={handleInputChange}
-                />
-                <input name="phone" className="input-field" placeholder="Phone" onChange={handleInputChange} value={customerDetails.phone} required />
-                <textarea name="address" className="input-field" placeholder="Address" onChange={handleInputChange} value={customerDetails.address} required></textarea>
-                <div className="qr-container" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PayToSeller" className="qr-frame" style={{ width: '80px', margin: 0 }} alt="QR"/>
-                  <div><strong>Scan to Pay</strong><br /><span style={{ color: '#64748b', fontSize: '0.9rem' }}>PurpleBank: 123-456</span></div>
+              
+              {/* CHECK: IS USER LOGGED IN? */}
+              {session ? (
+                // OPTION A: LOGGED IN -> SHOW CHECKOUT FORM
+                <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <h3>Shipping Details</h3>
+                  <input
+                    name="email" className="input-field" placeholder="Email" required
+                    value={customerDetails.email}
+                    onChange={handleInputChange}
+                    disabled // Disable email editing since it comes from login
+                    style={{ background: '#f1f5f9', cursor: 'not-allowed' }}
+                  />
+                  <input name="phone" className="input-field" placeholder="Phone" onChange={handleInputChange} value={customerDetails.phone} required />
+                  <textarea name="address" className="input-field" placeholder="Address" onChange={handleInputChange} value={customerDetails.address} required></textarea>
+                  
+                  <div className="qr-container" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PayToSeller" className="qr-frame" style={{ width: '80px', margin: 0 }} alt="QR"/>
+                    <div><strong>Scan to Pay</strong><br /><span style={{ color: '#64748b', fontSize: '0.9rem' }}>PurpleBank: 123-456</span></div>
+                  </div>
+                  
+                  <input type="file" name="receipt" accept="image/*" required style={{ width: '100%' }} />
+                  <button type="submit" className="checkout-btn" disabled={uploading}>{uploading ? 'Processing...' : 'Complete Order'} <Upload size={18} /></button>
+                </form>
+              ) : (
+                // OPTION B: NOT LOGGED IN -> SHOW LOGIN PROMPT
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', gap: '1.5rem' }}>
+                   <div style={{ background: '#f1f5f9', padding: '1.5rem', borderRadius: '50%' }}>
+                     <User size={48} color="#94a3b8" />
+                   </div>
+                   <div>
+                     <h3>Login Required</h3>
+                     <p style={{ color: '#64748b', maxWidth: '250px', margin: '0.5rem auto' }}>
+                       You must be logged in to place an order and track your purchase history.
+                     </p>
+                   </div>
+                   <button className="checkout-btn" onClick={handleGoogleLogin} style={{ background: 'white', color: '#1e293b', border: '1px solid #cbd5e1' }}>
+                      <img src="https://www.google.com/favicon.ico" alt="G" style={{ width: '18px' }}/>
+                      Sign in with Google
+                   </button>
                 </div>
-                <input type="file" name="receipt" accept="image/*" required style={{ width: '100%' }} />
-                <button type="submit" className="checkout-btn" disabled={uploading}>{uploading ? 'Processing...' : 'Complete Order'} <Upload size={18} /></button>
-              </form>
+              )}
+
             </div>
           </div>
         </div>
