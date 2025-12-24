@@ -18,8 +18,11 @@ function App() {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  const [orders, setOrders] = useState([]); // All orders (for Admin)
-  const [myOrders, setMyOrders] = useState([]); // Personal orders (for Customer)
+  // Toggle for the zoomed-in QR view (MOVED UP)
+  const [isQRExpanded, setIsQRExpanded] = useState(false);
+
+  const [orders, setOrders] = useState([]); 
+  const [myOrders, setMyOrders] = useState([]); 
   const [soldCounts, setSoldCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +40,6 @@ function App() {
 
   // --- INIT ---
   useEffect(() => {
-    // 1. Check Session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
@@ -46,14 +48,13 @@ function App() {
       }
     });
 
-    // 2. Auth Listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
         setCustomerDetails(prev => ({ ...prev, email: session.user.email }));
         fetchMyOrders(session.user.email);
       } else {
-        setMyOrders([]); // Clear personal orders on logout
+        setMyOrders([]);
       }
     });
 
@@ -68,7 +69,6 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Save cart
   useEffect(() => {
     localStorage.setItem('purpleCart', JSON.stringify(cart));
   }, [cart]);
@@ -94,7 +94,6 @@ function App() {
     if (data) setOrders(data);
   };
 
-  // Fetch orders specific to the logged-in customer
   const fetchMyOrders = async (email) => {
     if (!email) return;
     const { data } = await supabase.from('orders').select('*').eq('customer_email', email).order('created_at', { ascending: false });
@@ -163,7 +162,7 @@ function App() {
         items: cart,
         receipt_url: publicUrl,
         status: 'pending',
-        customer_email: customerDetails.email, // Will be auto-filled if logged in
+        customer_email: customerDetails.email,
         customer_address: customerDetails.address,
         customer_phone: customerDetails.phone
       }]);
@@ -243,16 +242,33 @@ function App() {
     );
   };
 
+  const renderQRZoom = () => {
+    if (!isQRExpanded) return null;
+    return (
+      <div className="modal-overlay" onClick={() => setIsQRExpanded(false)} style={{ zIndex: 2000 }}>
+        <div className="modal" style={{ width: 'auto', height: 'auto', maxWidth: '90%', padding: '1.5rem', textAlign: 'center' }}>
+          <h3 style={{ marginBottom: '1rem' }}>Scan to Pay</h3>
+          {/* BIG IMAGE - Make sure /qr.jpg exists in public folder! */}
+          <img 
+            src="/qr.jpg" 
+            alt="Big QR" 
+            style={{ width: '100%', maxWidth: '350px', height: 'auto', display: 'block', margin: '0 auto' }} 
+          />
+          <p style={{ color: '#64748b', marginTop: '1rem' }}>Tap anywhere to close</p>
+        </div>
+      </div>
+    );
+  };
+
   // --- VIEWS ---
 
- // 1. CART VIEW
+  // 1. CART VIEW
   if (view === 'cart') {
     return (
       <div className="modal-overlay">
         <div className="modal">
           <button className="close-btn" onClick={() => setView('shop')}><X size={20}/></button>
           <div className="modal-content-grid">
-            {/* LEFT SIDE: Cart Items */}
             <div className="modal-left" style={{ flexDirection: 'column', alignItems: 'stretch', padding: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2 style={{ margin: 0 }}>Your Cart</h2>
@@ -272,35 +288,48 @@ function App() {
               </div>
               <div className="total-row">Total: RM{cart.reduce((sum, i) => sum + i.price, 0).toFixed(2)}</div>
             </div>
-
-            {/* RIGHT SIDE: Checkout Form OR Login Prompt */}
+            
             <div className="modal-right">
-              
-              {/* CHECK: IS USER LOGGED IN? */}
+              {/* CHECK LOGIN STATUS */}
               {session ? (
-                // OPTION A: LOGGED IN -> SHOW CHECKOUT FORM
                 <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <h3>Shipping Details</h3>
                   <input
                     name="email" className="input-field" placeholder="Email" required
                     value={customerDetails.email}
                     onChange={handleInputChange}
-                    disabled // Disable email editing since it comes from login
+                    disabled
                     style={{ background: '#f1f5f9', cursor: 'not-allowed' }}
                   />
                   <input name="phone" className="input-field" placeholder="Phone" onChange={handleInputChange} value={customerDetails.phone} required />
                   <textarea name="address" className="input-field" placeholder="Address" onChange={handleInputChange} value={customerDetails.address} required></textarea>
                   
                   <div className="qr-container" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PayToSeller" className="qr-frame" style={{ width: '80px', margin: 0 }} alt="QR"/>
-                    <div><strong>Scan to Pay</strong><br /><span style={{ color: '#64748b', fontSize: '0.9rem' }}>PurpleBank: 123-456</span></div>
+                    
+                    {/* SMALL QR IMAGE - CLICK TO ZOOM */}
+                    <img
+                      src="/qr.jpg"
+                      alt="Scan to pay"
+                      className="qr-frame"
+                      onClick={() => setIsQRExpanded(true)} 
+                      style={{ 
+                        width: '80px', 
+                        height: '80px', 
+                        objectFit: 'contain', 
+                        margin: 0, 
+                        background: 'white', 
+                        cursor: 'zoom-in',
+                        border: '1px solid #e2e8f0'
+                      }}
+                    />
+                    
+                    <div><strong>Scan to Pay</strong><br /><span style={{ color: '#64748b', fontSize: '0.9rem' }}>Account Name: RAJA AHMAD SHUKRI BIN RAJA AHMAD KAHAR</span></div>
                   </div>
                   
                   <input type="file" name="receipt" accept="image/*" required style={{ width: '100%' }} />
                   <button type="submit" className="checkout-btn" disabled={uploading}>{uploading ? 'Processing...' : 'Complete Order'} <Upload size={18} /></button>
                 </form>
               ) : (
-                // OPTION B: NOT LOGGED IN -> SHOW LOGIN PROMPT
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', gap: '1.5rem' }}>
                    <div style={{ background: '#f1f5f9', padding: '1.5rem', borderRadius: '50%' }}>
                      <User size={48} color="#94a3b8" />
@@ -308,7 +337,7 @@ function App() {
                    <div>
                      <h3>Login Required</h3>
                      <p style={{ color: '#64748b', maxWidth: '250px', margin: '0.5rem auto' }}>
-                       You must be logged in to place an order and track your purchase history.
+                       You must be logged in to place an order.
                      </p>
                    </div>
                    <button className="checkout-btn" onClick={handleGoogleLogin} style={{ background: 'white', color: '#1e293b', border: '1px solid #cbd5e1' }}>
@@ -317,10 +346,11 @@ function App() {
                    </button>
                 </div>
               )}
-
             </div>
           </div>
         </div>
+        {/* Render Zoom Helper inside Cart View or outside (if Cart is a modal, keep it outside) */}
+        {renderQRZoom()}
       </div>
     );
   }
@@ -330,7 +360,7 @@ function App() {
     return (
       <div className="App">
         <nav className="navbar">
-          <div className="logo">ShoShop</div>
+          <div className="logo">PurpleShop</div>
           <div className="nav-actions">
             <button className="icon-btn" onClick={() => setView('shop')}>Back to Shop</button>
           </div>
@@ -497,6 +527,9 @@ function App() {
       </div>
       {notification && <div className="notification-toast"><Check size={16} /> {notification}</div>}
       {renderProductModal()}
+      
+      {/* Zoom Helper Component rendered here as well */}
+      {renderQRZoom()}
     </div>
   );
 }
