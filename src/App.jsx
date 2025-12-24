@@ -330,7 +330,7 @@ function App() {
     return (
       <div className="App">
         <nav className="navbar">
-          <div className="logo">PurpleShop</div>
+          <div className="logo">ShoShop</div>
           <div className="nav-actions">
             <button className="icon-btn" onClick={() => setView('shop')}>Back to Shop</button>
           </div>
