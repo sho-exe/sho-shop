@@ -4,8 +4,7 @@ import { ShoppingBag, X, Upload, ShieldCheck, Check, Loader2, Trash2, Plus, Pack
 import './index.css';
 
 // --- CONFIGURATION ---
-// REPLACE THIS WITH YOUR GOOGLE EMAIL ADDRESS
-const SELLER_EMAIL = 'shukriraja10@gmail.com'; 
+const SELLER_EMAIL = 'shukriraja10@gmail.com';
 
 function App() {
   // --- STATE ---
@@ -23,9 +22,9 @@ function App() {
   const [myOrders, setMyOrders] = useState([]); // Personal orders (for Customer)
   const [soldCounts, setSoldCounts] = useState({});
   const [loading, setLoading] = useState(true);
-  
+
   // Admin State
-  const [adminTab, setAdminTab] = useState('orders'); 
+  const [adminTab, setAdminTab] = useState('orders');
   const [newProduct, setNewProduct] = useState({ name: '', price: '', desc: '' });
   const [isAdding, setIsAdding] = useState(false);
 
@@ -33,7 +32,7 @@ function App() {
   const [customerDetails, setCustomerDetails] = useState({ email: '', address: '', phone: '' });
   const [notification, setNotification] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [qty, setQty] = useState(1); 
+  const [qty, setQty] = useState(1);
   const [uploading, setUploading] = useState(false);
 
   // --- INIT ---
@@ -42,7 +41,6 @@ function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        // Auto-fill email if logged in
         setCustomerDetails(prev => ({ ...prev, email: session.user.email }));
         fetchMyOrders(session.user.email);
       }
@@ -124,7 +122,7 @@ function App() {
     setCart([...cart, ...newItems]);
     setNotification(`${quantity}x ${product.name} added to bag!`);
     setTimeout(() => setNotification(null), 3000);
-    setSelectedProduct(null); 
+    setSelectedProduct(null);
   };
 
   const clearCart = () => {
@@ -171,13 +169,12 @@ function App() {
       }]);
 
       alert("Order sent! Check 'My Orders' for status updates.");
-      setCart([]); 
-      // Keep email if logged in, clear others
-      setCustomerDetails(prev => ({ ...prev, address: '', phone: '' })); 
+      setCart([]);
+      setCustomerDetails(prev => ({ ...prev, address: '', phone: '' }));
       setView('shop');
       calculateSalesStats();
-      if(session) fetchMyOrders(session.user.email); // Refresh my orders
-    } catch (error) { alert(error.message); } 
+      if (session) fetchMyOrders(session.user.email);
+    } catch (error) { alert(error.message); }
     finally { setUploading(false); }
   };
 
@@ -205,7 +202,7 @@ function App() {
     } catch (error) { alert(error.message); } finally { setIsAdding(false); }
   };
   const deleteProduct = async (id) => {
-    if(!window.confirm("Delete item?")) return;
+    if (!window.confirm("Delete item?")) return;
     await supabase.from('products').delete().eq('id', id);
     fetchProducts();
   };
@@ -247,7 +244,7 @@ function App() {
   };
 
   // --- VIEWS ---
-  
+
   // 1. CART VIEW
   if (view === 'cart') {
     return (
@@ -277,21 +274,19 @@ function App() {
             <div className="modal-right">
               <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <h3>Shipping Details</h3>
-                <input 
-                   name="email" className="input-field" placeholder="Email" required 
-                   value={customerDetails.email} // Auto-filled from state
-                   onChange={handleInputChange} 
-                   // If logged in, maybe disable editing? Optional.
-                   // disabled={!!session} 
+                <input
+                  name="email" className="input-field" placeholder="Email" required
+                  value={customerDetails.email}
+                  onChange={handleInputChange}
                 />
                 <input name="phone" className="input-field" placeholder="Phone" onChange={handleInputChange} value={customerDetails.phone} required />
                 <textarea name="address" className="input-field" placeholder="Address" onChange={handleInputChange} value={customerDetails.address} required></textarea>
                 <div className="qr-container" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PayToSeller" className="qr-frame" style={{ width: '80px', margin: 0 }} alt="QR"/>
-                  <div><strong>Scan to Pay</strong><br/><span style={{ color: '#64748b', fontSize: '0.9rem' }}>PurpleBank: 123-456</span></div>
+                  <div><strong>Scan to Pay</strong><br /><span style={{ color: '#64748b', fontSize: '0.9rem' }}>PurpleBank: 123-456</span></div>
                 </div>
                 <input type="file" name="receipt" accept="image/*" required style={{ width: '100%' }} />
-                <button type="submit" className="checkout-btn" disabled={uploading}>{uploading ? 'Processing...' : 'Complete Order'} <Upload size={18}/></button>
+                <button type="submit" className="checkout-btn" disabled={uploading}>{uploading ? 'Processing...' : 'Complete Order'} <Upload size={18} /></button>
               </form>
             </div>
           </div>
@@ -300,11 +295,11 @@ function App() {
     );
   }
 
-  // 2. CUSTOMER ORDERS VIEW (New)
+  // 2. CUSTOMER ORDERS VIEW
   if (view === 'customer_orders') {
     return (
       <div className="App">
-         <nav className="navbar">
+        <nav className="navbar">
           <div className="logo">PurpleShop</div>
           <div className="nav-actions">
             <button className="icon-btn" onClick={() => setView('shop')}>Back to Shop</button>
@@ -313,20 +308,20 @@ function App() {
         <div className="container">
           <h2>My Order History</h2>
           <div className="orders-list">
-             {myOrders.length === 0 && <p style={{color: '#64748b'}}>You haven't placed any orders yet.</p>}
-             {myOrders.map(order => (
-                <div key={order.id} className={`order-card ${order.status}`} style={{ alignItems: 'center' }}>
-                    <div style={{minWidth: '80px'}}>
-                      <strong>#{order.id}</strong><br/>
-                      <span className={`status-badge ${order.status}`}>{order.status}</span>
-                    </div>
-                    <div style={{flex: 1, margin: '0 1rem'}}>
-                       <strong>Items:</strong> {order.items?.map(i => i.name).join(', ')}<br/>
-                       <span style={{color: '#64748b', fontSize: '0.9rem'}}>Ordered on {new Date(order.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div style={{fontWeight: 'bold', color: '#7c3aed'}}>RM{order.total}</div>
+            {myOrders.length === 0 && <p style={{ color: '#64748b' }}>You haven't placed any orders yet.</p>}
+            {myOrders.map(order => (
+              <div key={order.id} className={`order-card ${order.status}`} style={{ alignItems: 'center' }}>
+                <div style={{ minWidth: '80px' }}>
+                  <strong>#{order.id}</strong><br />
+                  <span className={`status-badge ${order.status}`}>{order.status}</span>
                 </div>
-             ))}
+                <div style={{ flex: 1, margin: '0 1rem' }}>
+                  <strong>Items:</strong> {order.items?.map(i => i.name).join(', ')}<br />
+                  <span style={{ color: '#64748b', fontSize: '0.9rem' }}>Ordered on {new Date(order.created_at).toLocaleDateString()}</span>
+                </div>
+                <div style={{ fontWeight: 'bold', color: '#7c3aed' }}>RM{order.total}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -335,18 +330,17 @@ function App() {
 
   // 3. ADMIN VIEW
   if (view === 'admin') {
-    // PROTECT ADMIN VIEW: Only allow if email matches SELLER_EMAIL
     if (!session || session.user.email !== SELLER_EMAIL) {
-       return (
-         <div className="modal-overlay">
-            <div className="modal" style={{ height: 'auto', padding: '3rem', textAlign: 'center' }}>
-               <ShieldCheck size={48} style={{ color: '#ef4444', margin: '0 auto 1rem' }} />
-               <h2>Access Denied</h2>
-               <p style={{ color: '#64748b' }}>You are logged in as <strong>{session?.user.email}</strong>, but you do not have permission to view the Seller Dashboard.</p>
-               <button onClick={() => setView('shop')} className="add-btn" style={{ marginTop: '1rem' }}>Return to Shop</button>
-            </div>
-         </div>
-       );
+      return (
+        <div className="modal-overlay">
+          <div className="modal" style={{ height: 'auto', padding: '3rem', textAlign: 'center' }}>
+            <ShieldCheck size={48} style={{ color: '#ef4444', margin: '0 auto 1rem' }} />
+            <h2>Access Denied</h2>
+            <p style={{ color: '#64748b' }}>You are logged in as <strong>{session?.user.email}</strong>, but you do not have permission to view the Seller Dashboard.</p>
+            <button onClick={() => setView('shop')} className="add-btn" style={{ marginTop: '1rem' }}>Return to Shop</button>
+          </div>
+        </div>
+      );
     }
 
     return (
@@ -354,8 +348,8 @@ function App() {
         <nav className="navbar" style={{ background: '#1e293b', color: 'white' }}>
           <div className="logo" style={{ color: 'white' }}>Seller Dashboard</div>
           <div className="nav-actions">
-             <span style={{ fontSize: '0.9rem', color: '#cbd5e1', alignSelf: 'center' }}>{session.user.email}</span>
-             <button className="icon-btn" style={{ background: '#334155', color: 'white' }} onClick={() => setView('shop')}>Exit Admin</button>
+            <span style={{ fontSize: '0.9rem', color: '#cbd5e1', alignSelf: 'center' }}>{session.user.email}</span>
+            <button className="icon-btn" style={{ background: '#334155', color: 'white' }} onClick={() => setView('shop')}>Exit Admin</button>
           </div>
         </nav>
         <div className="container">
@@ -373,17 +367,17 @@ function App() {
               <button onClick={fetchOrders} className="icon-btn" style={{ marginBottom: '1rem' }}>Refresh List</button>
               {orders.map(order => (
                 <div key={order.id} className={`order-card ${order.status}`}>
-                   <div style={{ minWidth: '100px' }}><strong>#{order.id}</strong><br/><span className={`status-badge ${order.status}`}>{order.status}</span></div>
-                   <div style={{ flex: 1, margin: '0 1.5rem' }}>
-                      <div style={{ marginBottom: '8px' }}><strong>Items:</strong> {order.items?.map(i => i.name).join(', ')} <span style={{ marginLeft: '10px', color: '#7c3aed', fontWeight: 'bold' }}>(RM{order.total})</span></div>
-                      {(order.customer_email) && <div style={{ background: '#f1f5f9', padding: '10px', borderRadius: '8px', fontSize: '0.85rem' }}>📧 {order.customer_email} • 📞 {order.customer_phone}<br/>🏠 {order.customer_address}</div>}
-                   </div>
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end' }}>
-                     <a href={order.receipt_url} target="_blank" rel="noreferrer" style={{ fontSize: '0.9rem', color: '#64748b', textDecoration: 'underline' }}>View Receipt</a>
-                     {order.status === 'pending' && <button onClick={() => approveOrder(order.id)} className="approve-btn">Approve <Check size={14}/></button>}
-                     {order.status === 'approved' && <button onClick={() => markDelivered(order.id)} className="deliver-btn">Ship <Upload size={14} style={{ transform: 'rotate(90deg)' }}/></button>}
-                     {order.status === 'delivered' && <span style={{ color: '#22c55e', display: 'flex', alignItems: 'center', gap: '5px' }}><Check size={14} /> Complete</span>}
-                   </div>
+                  <div style={{ minWidth: '100px' }}><strong>#{order.id}</strong><br /><span className={`status-badge ${order.status}`}>{order.status}</span></div>
+                  <div style={{ flex: 1, margin: '0 1.5rem' }}>
+                    <div style={{ marginBottom: '8px' }}><strong>Items:</strong> {order.items?.map(i => i.name).join(', ')} <span style={{ marginLeft: '10px', color: '#7c3aed', fontWeight: 'bold' }}>(RM{order.total})</span></div>
+                    {(order.customer_email) && <div style={{ background: '#f1f5f9', padding: '10px', borderRadius: '8px', fontSize: '0.85rem' }}>📧 {order.customer_email} • 📞 {order.customer_phone}<br />🏠 {order.customer_address}</div>}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end' }}>
+                    <a href={order.receipt_url} target="_blank" rel="noreferrer" style={{ fontSize: '0.9rem', color: '#64748b', textDecoration: 'underline' }}>View Receipt</a>
+                    {order.status === 'pending' && <button onClick={() => approveOrder(order.id)} className="approve-btn">Approve <Check size={14} /></button>}
+                    {order.status === 'approved' && <button onClick={() => markDelivered(order.id)} className="deliver-btn">Ship <Upload size={14} style={{ transform: 'rotate(90deg)' }} /></button>}
+                    {order.status === 'delivered' && <span style={{ color: '#22c55e', display: 'flex', alignItems: 'center', gap: '5px' }}><Check size={14} /> Complete</span>}
+                  </div>
                 </div>
               ))}
             </div>
@@ -394,11 +388,11 @@ function App() {
               <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
                 <h3>Add New Product</h3>
                 <form onSubmit={handleAddProduct} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                   <input placeholder="Name" className="input-field" required value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})}/>
-                   <input type="number" placeholder="Price (RM)" className="input-field" required value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})}/>
-                   <input placeholder="Desc" className="input-field" style={{ gridColumn: 'span 2' }} required value={newProduct.desc} onChange={e => setNewProduct({...newProduct, desc: e.target.value})}/>
-                   <div style={{ gridColumn: 'span 2' }}><label>Image:</label><input type="file" name="image" accept="image/*" required style={{ width: '100%', marginTop: '5px' }} /></div>
-                   <button type="submit" className="add-btn" style={{ gridColumn: 'span 2' }} disabled={isAdding}>{isAdding ? 'Uploading...' : 'Create'} <Plus size={18}/></button>
+                  <input placeholder="Name" className="input-field" required value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} />
+                  <input type="number" placeholder="Price (RM)" className="input-field" required value={newProduct.price} onChange={e => setNewProduct({ ...newProduct, price: e.target.value })} />
+                  <input placeholder="Desc" className="input-field" style={{ gridColumn: 'span 2' }} required value={newProduct.desc} onChange={e => setNewProduct({ ...newProduct, desc: e.target.value })} />
+                  <div style={{ gridColumn: 'span 2' }}><label>Image:</label><input type="file" name="image" accept="image/*" required style={{ width: '100%', marginTop: '5px' }} /></div>
+                  <button type="submit" className="add-btn" style={{ gridColumn: 'span 2' }} disabled={isAdding}>{isAdding ? 'Uploading...' : 'Create'} <Plus size={18} /></button>
                 </form>
               </div>
               <div className="product-list-admin">
@@ -422,47 +416,45 @@ function App() {
       <nav className="navbar">
         <div className="logo">PurpleShop</div>
         <div className="nav-actions">
-          
-          {/* USER NOT LOGGED IN */}
           {!session && (
             <button className="icon-btn" onClick={handleGoogleLogin}>
-               <User size={18} /> Login
+              <User size={18} /> Login
             </button>
           )}
 
-          {/* USER LOGGED IN */}
           {session && (
-            <>
-               {/* 1. If Admin: Show Seller Dashboard Button */}
-               {session.user.email === SELLER_EMAIL && (
-                 <button className="icon-btn" onClick={() => { setView('admin'); fetchOrders(); setAdminTab('orders'); }}>
-                    <ShieldCheck size={18}/> Seller
-                 </button>
-               )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="user-email" style={{ fontSize: '0.9rem', fontWeight: '600', color: '#475569', marginRight: '5px' }}>
+                {session.user.email}
+              </span>
 
-               {/* 2. For Everyone: Show My Orders */}
-               <button className="icon-btn" onClick={() => setView('customer_orders')}>
-                  <History size={18} /> My Orders
-               </button>
+              {session.user.email === SELLER_EMAIL && (
+                <button className="icon-btn" onClick={() => { setView('admin'); fetchOrders(); setAdminTab('orders'); }}>
+                  <ShieldCheck size={18} />
+                </button>
+              )}
 
-               {/* 3. Logout */}
-               <button className="icon-btn" style={{borderColor: '#ef4444', color: '#ef4444'}} onClick={handleLogout}>
-                  <LogOut size={18} />
-               </button>
-            </>
+              <button className="icon-btn" onClick={() => setView('customer_orders')}>
+                <History size={18} />
+              </button>
+
+              <button className="icon-btn" style={{ borderColor: '#ef4444', color: '#ef4444' }} onClick={handleLogout}>
+                <LogOut size={18} />
+              </button>
+            </div>
           )}
 
           <button className="icon-btn" onClick={handleOpenCart}>
-            <ShoppingBag size={18}/> <span>Cart ({cart.length})</span>
+            <ShoppingBag size={18} /> <span>Cart ({cart.length})</span>
           </button>
         </div>
       </nav>
       <div className="container">
-        {loading ? <div className="loading"><Loader2 className="spin"/> Loading...</div> : (
+        {loading ? <div className="loading"><Loader2 className="spin" /> Loading...</div> : (
           <div className="product-grid">
             {products.map((product) => (
               <div key={product.id} className="card" onClick={() => { setSelectedProduct(product); setQty(1); }} style={{ cursor: 'pointer' }}>
-                <img src={product.image_url} alt={product.name} className="card-img"/>
+                <img src={product.image_url} alt={product.name} className="card-img" />
                 <div className="card-body">
                   <h3>{product.name}</h3>
                   <div className="sales-info"><span className="price">RM{product.price}</span>{soldCounts[product.id] > 0 && <span className="sold-badge">🔥 {soldCounts[product.id]} Sold</span>}</div>
@@ -473,7 +465,7 @@ function App() {
           </div>
         )}
       </div>
-      {notification && <div className="notification-toast"><Check size={16}/> {notification}</div>}
+      {notification && <div className="notification-toast"><Check size={16} /> {notification}</div>}
       {renderProductModal()}
     </div>
   );

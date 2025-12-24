@@ -7,6 +7,89 @@
   --card-bg: #ffffff;
 }
 
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 768px) {
+  
+  /* 1. Stack the Navbar */
+  .navbar {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  /* 2. Scrollable Buttons (if user has many icons) */
+  .nav-actions {
+    width: 100%;
+    justify-content: center; /* Center buttons */
+    flex-wrap: wrap;         /* Allow wrapping */
+    gap: 0.8rem;
+  }
+
+  /* 3. Hide Email on Mobile to save space */
+  .user-email {
+    display: none !important;
+  }
+
+  /* 4. Adjust Cart Button Text */
+  /* Hide the word "Cart", just show count if needed, or keep it small */
+  .icon-btn {
+    padding: 0.6rem; /* Smaller buttons */
+    font-size: 0.9rem;
+  }
+
+  /* 5. Mobile Grid (1 Column) */
+  .product-grid {
+    grid-template-columns: 1fr; /* 1 item per row */
+    gap: 1.5rem;
+  }
+
+  /* 6. Modals (Full Screen on Mobile) */
+  .modal {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important; /* Remove corners */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-content-grid {
+    grid-template-columns: 1fr; /* Stack Image & Info */
+    display: block; /* Allow normal scrolling */
+    overflow-y: auto;
+  }
+
+  .modal-left {
+    height: 250px; /* Limit image height */
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .modal-right {
+    padding: 1.5rem;
+    height: auto; /* Let content grow */
+  }
+
+  /* 7. Admin/Order Cards Mobile */
+  .order-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .order-card > div {
+    width: 100%; /* Full width sections */
+    margin: 0 !important;
+    text-align: left !important;
+  }
+  
+  .order-card .approve-btn, 
+  .order-card .deliver-btn {
+    width: 100%; /* Full width buttons */
+    justify-content: center;
+  }
+}
+
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
