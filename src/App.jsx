@@ -21,11 +21,12 @@ function App() {
   // Toggle for the zoomed-in QR view (MOVED UP)
   const [isQRExpanded, setIsQRExpanded] = useState(false);
 
-  const [orders, setOrders] = useState([]); 
-  const [myOrders, setMyOrders] = useState([]); 
+  const [orders, setOrders] = useState([]);
+  const [myOrders, setMyOrders] = useState([]);
   const [soldCounts, setSoldCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
+  const [fileName, setFileName] = useState("");
   // Admin State
   const [adminTab, setAdminTab] = useState('orders');
   const [newProduct, setNewProduct] = useState({ name: '', price: '', desc: '' });
@@ -81,6 +82,9 @@ function App() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setView('shop');
+
+    setNotification("Successfully logged out!");
+    setTimeout(() => setNotification(null), 3000);
   };
 
   // --- DATA FETCHING ---
@@ -138,10 +142,14 @@ function App() {
   };
 
   const handleOpenCart = () => {
-    if (cart.length === 0) return alert("Your cart is empty!");
+    // NEW: Check if empty and show toast instead of alert
+    if (cart.length === 0) {
+      setNotification("Your cart is empty!");
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
     setView('cart');
   };
-
   // --- CHECKOUT ---
   const handleInputChange = (e) => setCustomerDetails({ ...customerDetails, [e.target.name]: e.target.value });
 
@@ -212,7 +220,7 @@ function App() {
     return (
       <div className="modal-overlay" onClick={() => setSelectedProduct(null)}>
         <div className="modal" onClick={e => e.stopPropagation()}>
-          <button className="close-btn" onClick={() => setSelectedProduct(null)}><X size={20}/></button>
+          <button className="close-btn" onClick={() => setSelectedProduct(null)}><X size={20} /></button>
           <div className="modal-content-grid">
             <div className="modal-left" style={{ padding: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', background: '#f1f5f9' }}>
               <img src={selectedProduct.image_url} alt={selectedProduct.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -249,10 +257,10 @@ function App() {
         <div className="modal" style={{ width: 'auto', height: 'auto', maxWidth: '90%', padding: '1.5rem', textAlign: 'center' }}>
           <h3 style={{ marginBottom: '1rem' }}>Scan to Pay</h3>
           {/* BIG IMAGE - Make sure /qr.jpg exists in public folder! */}
-          <img 
-            src="/qr.jpg" 
-            alt="Big QR" 
-            style={{ width: '100%', maxWidth: '350px', height: 'auto', display: 'block', margin: '0 auto' }} 
+          <img
+            src="/qr.jpg"
+            alt="Big QR"
+            style={{ width: '100%', maxWidth: '350px', height: 'auto', display: 'block', margin: '0 auto' }}
           />
           <p style={{ color: '#64748b', marginTop: '1rem' }}>Tap anywhere to close</p>
         </div>
@@ -267,7 +275,7 @@ function App() {
     return (
       <div className="modal-overlay">
         <div className="modal">
-          <button className="close-btn" onClick={() => setView('shop')}><X size={20}/></button>
+          <button className="close-btn" onClick={() => setView('shop')}><X size={20} /></button>
           <div className="modal-content-grid">
             <div className="modal-left" style={{ flexDirection: 'column', alignItems: 'stretch', padding: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -288,7 +296,7 @@ function App() {
               </div>
               <div className="total-row">Total: RM{cart.reduce((sum, i) => sum + i.price, 0).toFixed(2)}</div>
             </div>
-            
+
             <div className="modal-right">
               {/* CHECK LOGIN STATUS */}
               {session ? (
@@ -303,47 +311,61 @@ function App() {
                   />
                   <input name="phone" className="input-field" placeholder="Phone" onChange={handleInputChange} value={customerDetails.phone} required />
                   <textarea name="address" className="input-field" placeholder="Address" onChange={handleInputChange} value={customerDetails.address} required></textarea>
-                  
+
                   <div className="qr-container" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    
+
                     {/* SMALL QR IMAGE - CLICK TO ZOOM */}
                     <img
                       src="/qr.jpg"
                       alt="Scan to pay"
                       className="qr-frame"
-                      onClick={() => setIsQRExpanded(true)} 
-                      style={{ 
-                        width: '80px', 
-                        height: '80px', 
-                        objectFit: 'contain', 
-                        margin: 0, 
-                        background: 'white', 
+                      onClick={() => setIsQRExpanded(true)}
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        objectFit: 'contain',
+                        margin: 0,
+                        background: 'white',
                         cursor: 'zoom-in',
                         border: '1px solid #e2e8f0'
                       }}
                     />
-                    
+
                     <div><strong>Scan to Pay</strong><br /><span style={{ color: '#64748b', fontSize: '0.9rem' }}>Account Name: RAJA AHMAD SHUKRI BIN RAJA AHMAD KAHAR</span></div>
                   </div>
-                  
-                  <input type="file" name="receipt" accept="image/*" required style={{ width: '100%' }} />
-                  <button type="submit" className="checkout-btn" disabled={uploading}>{uploading ? 'Processing...' : 'Complete Order'} <Upload size={18} /></button>
+
+{/* CUSTOM FILE UPLOAD */}
+<div className="file-upload-wrapper">
+  <label htmlFor="receipt-upload" className="file-upload-label">
+    <Upload size={18} />
+    {fileName ? fileName : "Upload Receipt"}
+  </label>
+  <input 
+    id="receipt-upload"
+    type="file" 
+    name="receipt" 
+    accept="image/*" 
+    required 
+    onChange={(e) => setFileName(e.target.files[0]?.name || "")}
+    style={{ display: 'none' }} // Hide the ugly default input
+  />
+</div>                  <button type="submit" className="checkout-btn" disabled={uploading}>{uploading ? 'Processing...' : 'Complete Order'} <Upload size={18} /></button>
                 </form>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', gap: '1.5rem' }}>
-                   <div style={{ background: '#f1f5f9', padding: '1.5rem', borderRadius: '50%' }}>
-                     <User size={48} color="#94a3b8" />
-                   </div>
-                   <div>
-                     <h3>Login Required</h3>
-                     <p style={{ color: '#64748b', maxWidth: '250px', margin: '0.5rem auto' }}>
-                       You must be logged in to place an order.
-                     </p>
-                   </div>
-                   <button className="checkout-btn" onClick={handleGoogleLogin} style={{ background: 'white', color: '#1e293b', border: '1px solid #cbd5e1' }}>
-                      <img src="https://www.google.com/favicon.ico" alt="G" style={{ width: '18px' }}/>
-                      Sign in with Google
-                   </button>
+                  <div style={{ background: '#f1f5f9', padding: '1.5rem', borderRadius: '50%' }}>
+                    <User size={48} color="#94a3b8" />
+                  </div>
+                  <div>
+                    <h3>Login Required</h3>
+                    <p style={{ color: '#64748b', maxWidth: '250px', margin: '0.5rem auto' }}>
+                      You must be logged in to place an order.
+                    </p>
+                  </div>
+                  <button className="checkout-btn" onClick={handleGoogleLogin} style={{ background: 'white', color: '#1e293b', border: '1px solid #cbd5e1' }}>
+                    <img src="https://www.google.com/favicon.ico" alt="G" style={{ width: '18px' }} />
+                    Sign in with Google
+                  </button>
                 </div>
               )}
             </div>
@@ -360,7 +382,7 @@ function App() {
     return (
       <div className="App">
         <nav className="navbar">
-          <div className="logo">PurpleShop</div>
+          <div className="logo">ShoShop</div>
           <div className="nav-actions">
             <button className="icon-btn" onClick={() => setView('shop')}>Back to Shop</button>
           </div>
@@ -474,7 +496,7 @@ function App() {
   return (
     <div className="App">
       <nav className="navbar">
-        <div className="logo">PurpleShop</div>
+        <div className="logo">ShoShop</div>
         <div className="nav-actions">
           {!session && (
             <button className="icon-btn" onClick={handleGoogleLogin}>
@@ -527,7 +549,7 @@ function App() {
       </div>
       {notification && <div className="notification-toast"><Check size={16} /> {notification}</div>}
       {renderProductModal()}
-      
+
       {/* Zoom Helper Component rendered here as well */}
       {renderQRZoom()}
     </div>

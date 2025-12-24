@@ -7,6 +7,39 @@
   --card-bg: #ffffff;
 }
 
+/* --- FILE UPLOAD STYLING --- */
+.file-upload-wrapper {
+  margin-bottom: 0.5rem;
+}
+
+.file-upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  background-color: #f1f5f9;
+  border: 2px dashed #cbd5e1; /* Dashed border looks like a "drop zone" */
+  border-radius: 8px;
+  color: #475569;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.file-upload-label:hover {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+/* Optional: Change color when file is selected */
+.file-upload-label svg {
+  color: var(--primary);
+}
+
 /* --- MOBILE RESPONSIVENESS --- */
 @media (max-width: 768px) {
   
