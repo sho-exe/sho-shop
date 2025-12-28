@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient';
 import { ShoppingBag, X, Upload, ShieldCheck, Check, Loader2, Trash2, Plus, Package, LogOut, User, History } from 'lucide-react';
 import './index.css';
 
+
 // --- CONFIGURATION ---
 const SELLER_EMAIL = 'shukriraja10@gmail.com';
 
@@ -499,8 +500,31 @@ function App() {
     return (
       <div className="App">
         <nav className="navbar">
-          <div className="logo">ShoShop</div>
-          <div className="nav-actions">
+          <div
+            className="logo"
+            onClick={() => setView('shop')}
+            style={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',  // Space between logo and text
+              fontSize: '1.5rem',
+              fontWeight: 'bold'
+            }}
+          >
+            {/* LOGO IMAGE */}
+            <img
+              src={logo}
+              alt="ShoShop Logo"
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                objectFit: 'cover'
+              }}
+            />
+            ShoShops
+          </div>          <div className="nav-actions">
             <button className="icon-btn" onClick={() => setView('shop')}>Back to Shop</button>
           </div>
         </nav>
@@ -527,7 +551,7 @@ function App() {
     );
   }
 
-// 3. ADMIN VIEW
+  // 3. ADMIN VIEW
   if (view === 'admin') {
     if (!session || session.user.email !== SELLER_EMAIL) {
       return (
@@ -545,7 +569,17 @@ function App() {
     return (
       <div className="App">
         <nav className="navbar" style={{ background: '#1e293b', color: 'white' }}>
-          <div className="logo" style={{ color: 'white' }}>Seller Dashboard</div>
+
+          {/* ADMIN LOGO SECTION */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem', fontWeight: 'bold' }}>
+            <img
+              src={logo}
+              alt="Logo"
+              style={{ width: '35px', height: '35px', borderRadius: '6px' }}
+            />
+            Seller Dashboard
+          </div>
+
           <div className="nav-actions">
             <span style={{ fontSize: '0.9rem', color: '#cbd5e1', alignSelf: 'center' }}>{session.user.email}</span>
             <button className="icon-btn" style={{ background: '#334155', color: 'white' }} onClick={() => setView('shop')}>Exit Admin</button>
@@ -596,49 +630,49 @@ function App() {
               </div>
               <div className="product-list-admin">
                 {products.map(p => (
-                  <div key={p.id} className="cart-item" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                    
+                  <div key={p.id} className="cart-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+
                     {/* Image & Name */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <img src={p.image_url} alt={p.name} style={{ width: '50px', height: '50px', borderRadius: '4px', objectFit: 'cover' }} />
-                        <div>
-                            <strong>{p.name}</strong>
-                            <div style={{ color: '#64748b', fontSize: '0.9rem' }}>RM{p.price.toFixed(2)}</div>
-                        </div>
+                      <img src={p.image_url} alt={p.name} style={{ width: '50px', height: '50px', borderRadius: '4px', objectFit: 'cover' }} />
+                      <div>
+                        <strong>{p.name}</strong>
+                        <div style={{ color: '#64748b', fontSize: '0.9rem' }}>RM{p.price.toFixed(2)}</div>
+                      </div>
                     </div>
 
                     {/* Stock Control with SAVE BUTTON */}
-                    <div style={{display:'flex', alignItems:'flex-end', gap:'8px'}}>
-                        
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <label style={{fontSize: '0.75rem', fontWeight:'bold', color: '#64748b', marginBottom:'2px'}}>Stock</label>
-                          <input 
-                              id={`stock-input-${p.id}`}
-                              type="number" 
-                              defaultValue={p.stock} 
-                              className="input-field"
-                              style={{ width: '60px', padding: '6px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                          />
-                        </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
 
-                        {/* Blue Check Button */}
-                        <button 
-                          onClick={() => updateProductStock(p.id, `stock-input-${p.id}`)}
-                          className="icon-btn"
-                          title="Save Stock"
-                          style={{ background: '#dbeafe', color: '#2563eb', borderColor: '#bfdbfe', height: '38px', width: '38px', padding: 0, justifyContent: 'center' }}
-                        >
-                          <Check size={18} />
-                        </button>
-                        
-                        {/* Delete Button */}
-                        <button 
-                          onClick={() => deleteProduct(p.id)} 
-                          className="icon-btn" 
-                          style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2', height: '38px', width: '38px', padding: 0, justifyContent: 'center' }}
-                        >
-                            <Trash2 size={18} />
-                        </button>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#64748b', marginBottom: '2px' }}>Stock</label>
+                        <input
+                          id={`stock-input-${p.id}`}
+                          type="number"
+                          defaultValue={p.stock}
+                          className="input-field"
+                          style={{ width: '60px', padding: '6px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                        />
+                      </div>
+
+                      {/* Blue Check Button */}
+                      <button
+                        onClick={() => updateProductStock(p.id, `stock-input-${p.id}`)}
+                        className="icon-btn"
+                        title="Save Stock"
+                        style={{ background: '#dbeafe', color: '#2563eb', borderColor: '#bfdbfe', height: '38px', width: '38px', padding: 0, justifyContent: 'center' }}
+                      >
+                        <Check size={18} />
+                      </button>
+
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => deleteProduct(p.id)}
+                        className="icon-btn"
+                        style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2', height: '38px', width: '38px', padding: 0, justifyContent: 'center' }}
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
 
                   </div>
@@ -651,7 +685,7 @@ function App() {
         {/* --- CRITICAL: NOTIFICATION TOAST ADDED HERE --- */}
         {notification && (
           <div className="notification-toast" style={{ background: '#22c55e' }}>
-             <Check size={16} /> {notification}
+            <Check size={16} /> {notification}
           </div>
         )}
 
@@ -662,8 +696,29 @@ function App() {
   return (
     <div className="App">
       <nav className="navbar">
-        <div className="logo">ShoShop</div>
-        <div className="nav-actions">
+        <div
+          className="logo"
+          onClick={() => setView('shop')}
+          style={{
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontSize: '1.5rem'
+          }}
+        >
+          <img
+            src="/shoshop.png"
+            alt="ShoShop"
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '8px',
+              objectFit: 'cover'
+            }}
+          />
+          ShoShop
+        </div>        <div className="nav-actions">
           {!session && (
             <button className="icon-btn" onClick={handleGoogleLogin}>
               <User size={18} /> Login
