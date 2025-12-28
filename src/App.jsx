@@ -285,11 +285,26 @@ function App() {
               <div style={{ flex: 1, overflowY: 'auto' }}>
                 {getGroupedCart().map((item) => (
                   <div key={item.id} className="cart-item">
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 'bold', background: '#e2e8f0', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>{item.quantity}</span>
-                      <span>{item.name}</span>
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                      
+                      {/* 1. Quantity Bubble */}
+                      <span style={{ fontWeight: 'bold', background: '#e2e8f0', minWidth: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>
+                        {item.quantity}
+                      </span>
+
+                      {/* 2. NEW: Product Image */}
+                      <img 
+                        src={item.image_url} 
+                        alt={item.name} 
+                        style={{ width: '50px', height: '50px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #e2e8f0' }} 
+                      />
+
+                      {/* 3. Product Name */}
+                      <span style={{ fontWeight: '500' }}>{item.name}</span>
                     </div>
-                    <span>RM{(item.price * item.quantity).toFixed(2)}</span>
+                    
+                    {/* Price */}
+                    <span style={{ fontWeight: '600' }}>RM{(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
                 {cart.length === 0 && <p style={{ color: '#94a3b8', textAlign: 'center', marginTop: '2rem' }}>Your cart is empty.</p>}
@@ -302,12 +317,17 @@ function App() {
               {session ? (
                 <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <h3>Shipping Details</h3>
+                  {/* CHANGED: Label to Username and removed @domain from display */}
+                  <label style={{fontWeight: 'bold', fontSize: '0.9rem'}}>Username</label>
                   <input
-                    name="email" className="input-field" placeholder="Email" required
-                    value={customerDetails.email}
+                    name="email" 
+                    className="input-field" 
+                    placeholder="Username" 
+                    required
+                    // This splits the string at '@' and takes the first part [0]
+                    value={customerDetails.email ? customerDetails.email.split('@')[0] : ''}
                     onChange={handleInputChange}
-                    disabled
-                    style={{ background: '#f1f5f9', cursor: 'not-allowed' }}
+                    style={{  marginTop: '0.2rem' }}
                   />
                   <input name="phone" className="input-field" placeholder="Phone" onChange={handleInputChange} value={customerDetails.phone} required />
                   <textarea name="address" className="input-field" placeholder="Address" onChange={handleInputChange} value={customerDetails.address} required></textarea>

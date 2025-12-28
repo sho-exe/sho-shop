@@ -7,122 +7,6 @@
   --card-bg: #ffffff;
 }
 
-/* --- FILE UPLOAD STYLING --- */
-.file-upload-wrapper {
-  margin-bottom: 0.5rem;
-}
-
-.file-upload-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  padding: 12px;
-  background-color: #f1f5f9;
-  border: 2px dashed #cbd5e1; /* Dashed border looks like a "drop zone" */
-  border-radius: 8px;
-  color: #475569;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-
-.file-upload-label:hover {
-  background-color: #e2e8f0;
-  border-color: #94a3b8;
-  color: #1e293b;
-}
-
-/* Optional: Change color when file is selected */
-.file-upload-label svg {
-  color: var(--primary);
-}
-
-/* --- MOBILE RESPONSIVENESS --- */
-@media (max-width: 768px) {
-  
-  /* 1. Stack the Navbar */
-  .navbar {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-  }
-
-  /* 2. Scrollable Buttons (if user has many icons) */
-  .nav-actions {
-    width: 100%;
-    justify-content: center; /* Center buttons */
-    flex-wrap: wrap;         /* Allow wrapping */
-    gap: 0.8rem;
-  }
-
-  /* 3. Hide Email on Mobile to save space */
-  .user-email {
-    display: none !important;
-  }
-
-  /* 4. Adjust Cart Button Text */
-  /* Hide the word "Cart", just show count if needed, or keep it small */
-  .icon-btn {
-    padding: 0.6rem; /* Smaller buttons */
-    font-size: 0.9rem;
-  }
-
-  /* 5. Mobile Grid (1 Column) */
-  .product-grid {
-    grid-template-columns: 1fr; /* 1 item per row */
-    gap: 1.5rem;
-  }
-
-  /* 6. Modals (Full Screen on Mobile) */
-  .modal {
-    width: 100% !important;
-    height: 100% !important;
-    max-height: 100vh !important;
-    border-radius: 0 !important; /* Remove corners */
-    display: flex;
-    flex-direction: column;
-  }
-
-  .modal-content-grid {
-    grid-template-columns: 1fr; /* Stack Image & Info */
-    display: block; /* Allow normal scrolling */
-    overflow-y: auto;
-  }
-
-  .modal-left {
-    height: 250px; /* Limit image height */
-    border-right: none;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .modal-right {
-    padding: 1.5rem;
-    height: auto; /* Let content grow */
-  }
-
-  /* 7. Admin/Order Cards Mobile */
-  .order-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .order-card > div {
-    width: 100%; /* Full width sections */
-    margin: 0 !important;
-    text-align: left !important;
-  }
-  
-  .order-card .approve-btn, 
-  .order-card .deliver-btn {
-    width: 100%; /* Full width buttons */
-    justify-content: center;
-  }
-}
-
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -185,8 +69,8 @@ body {
 
 .product-grid {
   display: grid;
-  /* Responsive: 1 col on phone, up to 4 on desktop */
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  /* FORCE 3 COLUMNS ON DESKTOP */
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
 }
 
@@ -197,20 +81,18 @@ body {
   overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   border: 1px solid #e2e8f0;
-  transition: all 0.2s ease; /* Smooth hover transition */
+  transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   cursor: pointer;
 }
 
-/* Hover Effect: Lift up */
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 24px -6px rgba(124, 58, 237, 0.15);
   border-color: var(--primary);
 }
 
-/* Active Effect: Press down animation */
 .card:active {
   transform: translateY(-2px) scale(0.98);
   box-shadow: 0 4px 10px rgba(124, 58, 237, 0.15);
@@ -219,7 +101,7 @@ body {
 
 .card-img {
   width: 100%;
-  height: 250px;
+  height: 220;
   object-fit: cover;
   background: #f1f5f9;
 }
@@ -246,9 +128,11 @@ body {
 }
 
 .price {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-main);
+  font-size: 1.4rem;        /* Bigger than the title */
+  font-weight: 800;         /* Extra thick text */
+  color: var(--primary);    /* Purple color to match your theme */
+  letter-spacing: -1px;     /* Tighter spacing looks better for numbers */
+  display: block;           /* Ensures it sits nicely on its own line if needed */
 }
 
 .sold-badge {
@@ -271,7 +155,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
-  z-index: 2; /* Ensures button is clickable above card */
+  z-index: 2;
 }
 
 .add-btn:hover {
@@ -282,37 +166,32 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.7); /* Dark Blur Overlay */
+  background: rgba(15, 23, 42, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 100;
   backdrop-filter: blur(4px);
-  /* Animation: Fade In */
   animation: fadeIn 0.3s ease-out forwards;
 }
 
 .modal {
   background: white;
-  border-radius: 24px; /* Rounded Corners */
+  border-radius: 24px;
   width: 90%;
   max-width: 900px;
-  height: auto;
-  max-height: 90vh;
+  height: 80vh; /* Fixed height for consistent look */
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Important for corner radius */
+  overflow: hidden;
   position: relative;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  
-  /* Animation: Pop Up with Bounce */
   animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* Modal Layout (Split Screen) */
 .modal-content-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 50% Image, 50% Text */
+  grid-template-columns: 1fr 1fr;
   height: 100%;
   overflow: hidden;
 }
@@ -320,7 +199,7 @@ body {
 .modal-left {
   background: #f8fafc;
   border-right: 1px solid #e2e8f0;
-  overflow: hidden; /* Clips image */
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -354,196 +233,7 @@ body {
   color: var(--text-main);
 }
 
-/* --- CART & CHECKOUT --- */
-.cart-item {
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  margin-bottom: 0.8rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.total-row {
-  font-size: 1.2rem;
-  font-weight: 800;
-  margin-top: 1.5rem;
-  text-align: right;
-  color: var(--primary);
-}
-
-.qr-container {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.qr-frame {
-  display: inline-block;
-  padding: 1rem;
-  border: 2px dashed #cbd5e1;
-  border-radius: 12px;
-  margin: 1rem 0;
-  background: white;
-}
-
-.checkout-btn {
-  width: 100%;
-  padding: 1rem;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
-.checkout-btn:disabled { background: #94a3b8; cursor: not-allowed; }
-
-/* --- ADMIN DASHBOARD --- */
-.count-badge {
-  background: var(--primary);
-  color: white;
-  font-size: 0.8rem;
-  padding: 4px 10px;
-  border-radius: 20px;
-  margin-left: 10px;
-  vertical-align: middle;
-}
-
-.orders-list { display: grid; gap: 1rem; }
-.order-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-@media (min-width: 768px) {
-  .order-card {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-
-.status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
-.status-badge.pending { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
-.status-badge.approved { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
-.status-badge.delivered { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-
-.approve-btn { background: #22c55e; color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-.deliver-btn { background: #3b82f6; color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-
-/* --- NOTIFICATIONS (TOAST) --- */
-.notification-toast {
-  position: fixed;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #1e293b;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 50px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 500;
-  font-size: 0.95rem;
-  animation: slideUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-}
-
-/* --- ANIMATION KEYFRAMES --- */
-@keyframes slideUp {
-  from { opacity: 0; transform: translate(-50%, 20px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes popIn {
-  from { opacity: 0; transform: scale(0.9) translateY(20px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.loading { display: flex; justify-content: center; padding: 5rem; color: #94a3b8; gap: 10px; font-size: 1.1rem; }
-.spin { animation: spin 1s linear infinite; }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-/* --- MOBILE RESPONSIVENESS --- */
-@media (max-width: 768px) {
-  .modal-content-grid { grid-template-columns: 1fr; } /* Stack Modal */
-  .modal-left { 
-    border-right: none; 
-    border-bottom: 1px solid #e2e8f0; 
-    padding: 0;
-    max-height: 250px; 
-  }
-  .modal-right { padding: 1.5rem; }
-  .close-btn { top: 1rem; right: 1rem; }
-}
-
-/* --- FORM STYLES --- */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.input-field {
-  padding: 10px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  transition: border-color 0.2s;
-  width: 100%;
-  box-sizing: border-box; /* Ensures padding doesn't break layout */
-}
-
-.input-field:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-}
-
-textarea.input-field {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.active-tab {
-  background: #7c3aed !important; /* Purple */
-  color: white !important;
-  border-color: #7c3aed !important;
-}
-
-.product-list-admin {
-  display: grid;
-  gap: 1rem;
-}
-
-/* --- Add this to src/index.css --- */
-
+/* --- QUANTITY SELECTOR --- */
 .qty-wrapper {
   display: flex;
   align-items: center;
@@ -585,3 +275,251 @@ textarea.input-field {
   font-size: 1.1rem;
 }
 
+/* --- CART & CHECKOUT --- */
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.total-row {
+  margin-top: auto;
+  font-size: 1.5rem;
+  font-weight: 800;
+  padding-top: 1.5rem;
+  border-top: 2px dashed #e2e8f0;
+}
+
+.input-field {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  box-sizing: border-box; /* Fix padding issues */
+}
+
+.checkout-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #1e293b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkout-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* --- FILE UPLOAD STYLING --- */
+.file-upload-wrapper {
+  margin-bottom: 0.5rem;
+}
+
+.file-upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  background-color: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #475569;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.file-upload-label:hover {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.file-upload-label svg {
+  color: var(--primary);
+}
+
+/* --- ADMIN & ORDERS --- */
+.order-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+.status-badge.pending { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
+.status-badge.approved { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+.status-badge.delivered { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+
+.approve-btn, .deliver-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  border: none;
+}
+.approve-btn { background: #2563eb; color: white; }
+.deliver-btn { background: #16a34a; color: white; }
+
+.active-tab {
+  background: var(--primary) !important;
+  color: white !important;
+  border-color: var(--primary) !important;
+}
+
+/* --- UTILITIES & ANIMATIONS --- */
+.loading {
+  height: 50vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.notification-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: #22c55e;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  animation: slideUp 0.3s ease-out;
+  z-index: 2000;
+  font-weight: 600;
+}
+
+@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+
+/* --- MOBILE RESPONSIVENESS (AT THE BOTTOM) --- */
+@media (max-width: 768px) {
+  
+  .navbar {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .nav-actions {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+
+  .user-email {
+    display: none !important;
+  }
+
+  .icon-btn {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  /* 2 Columns on Mobile */
+  .product-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+
+  /* Smaller Text on Cards for Mobile */
+  .card h3 {
+    font-size: 0.9rem;
+  }
+  .card .price {
+    font-size: 1rem;
+  }
+  .card .add-btn {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  /* Full Screen Modal */
+  .modal {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+  }
+
+  .modal-content-grid {
+    grid-template-columns: 1fr;
+    display: block;
+    overflow-y: auto;
+  }
+
+  .modal-left {
+    height: 250px;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .modal-right {
+    padding: 1.5rem;
+    height: auto;
+  }
+
+  /* Stacked Order Cards */
+  .order-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .order-card > div {
+    width: 100%;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+  
+  .order-card .approve-btn, 
+  .order-card .deliver-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
