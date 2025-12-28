@@ -161,10 +161,12 @@ function App() {
 
     setUploading(true);
     try {
+      // 1. Upload Receipt
       const fileName = `${Date.now()}_${file.name}`;
       await supabase.storage.from('receipts').upload(fileName, file);
       const { data: { publicUrl } } = supabase.storage.from('receipts').getPublicUrl(fileName);
 
+      // 2. Create Order
       await supabase.from('orders').insert([{
         total: cart.reduce((sum, i) => sum + i.price, 0),
         items: cart,
@@ -175,14 +177,40 @@ function App() {
         customer_phone: customerDetails.phone
       }]);
 
-      alert("Order sent! Check 'My Orders' for status updates.");
+      // 3. NEW: DEDUCT STOCK
+      // We first calculate how many of each item is in the cart
+      const quantities = {};
+      cart.forEach(item => {
+        quantities[item.id] = (quantities[item.id] || 0) + 1;
+      });
+
+      // Then we loop through and update the database for each product
+      for (const [productId, count] of Object.entries(quantities)) {
+        // Fetch current stock to be safe
+        const { data: product } = await supabase.from('products').select('stock').eq('id', productId).single();
+        if (product) {
+          const newStock = Math.max(0, product.stock - count); // Ensure it doesn't go below 0
+          await supabase.from('products').update({ stock: newStock }).eq('id', productId);
+        }
+      }
+
+      // 4. Cleanup
+      setNotification("Order sent! Stock updated.");
+      setTimeout(() => setNotification(null), 3000);
       setCart([]);
       setCustomerDetails(prev => ({ ...prev, address: '', phone: '' }));
       setView('shop');
+
+      // Refresh data so we see the new stock levels immediately
+      fetchProducts();
       calculateSalesStats();
       if (session) fetchMyOrders(session.user.email);
-    } catch (error) { alert(error.message); }
-    finally { setUploading(false); }
+
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   // --- ADMIN ACTIONS ---
@@ -215,6 +243,7 @@ function App() {
   };
 
   // --- RENDER HELPERS ---
+  // --- RENDER HELPERS ---
   const renderProductModal = () => {
     if (!selectedProduct) return null;
     return (
@@ -230,17 +259,51 @@ function App() {
                 <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{selectedProduct.name}</h2>
                 <span className="price" style={{ fontSize: '1.5rem' }}>RM{selectedProduct.price}</span>
                 <p style={{ margin: '1.5rem 0', color: '#475569', lineHeight: '1.6' }}>{selectedProduct.description || "No description."}</p>
-                {soldCounts[selectedProduct.id] > 0 && <span className="sold-badge">🔥 {soldCounts[selectedProduct.id]} Sold</span>}
+
+                {/* NEW: Stock Status in Modal */}
+                <div style={{ marginBottom: '1rem' }}>
+                  {selectedProduct.stock === 0 ? (
+                    <span style={{ color: '#ef4444', fontWeight: 'bold', background: '#fee2e2', padding: '5px 10px', borderRadius: '4px' }}>Out of Stock</span>
+                  ) : (
+                    <span style={{ color: '#64748b', background: '#f1f5f9', padding: '5px 10px', borderRadius: '4px', fontSize: '0.9rem' }}>
+                      Only {selectedProduct.stock} left in stock
+                    </span>
+                  )}
+                </div>
               </div>
+
               <div style={{ marginTop: 'auto' }}>
                 <div className="qty-wrapper">
                   <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>Quantity:</span>
                   <div className="qty-control">
-                    <button onClick={() => setQty(q => Math.max(1, q - 1))}>-</button><span>{qty}</span><button onClick={() => setQty(q => q + 1)}>+</button>
+                    {/* Disable Minus if stock is 0 */}
+                    <button onClick={() => setQty(q => Math.max(1, q - 1))} disabled={selectedProduct.stock === 0}>-</button>
+
+                    <span>{selectedProduct.stock === 0 ? 0 : qty}</span>
+
+                    {/* FIX: Prevent going above stock limit */}
+                    <button
+                      onClick={() => setQty(q => Math.min(selectedProduct.stock, q + 1))}
+                      disabled={selectedProduct.stock === 0 || qty >= selectedProduct.stock}
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
-                <button onClick={() => addToCart(selectedProduct, qty)} className="add-btn" style={{ marginTop: '1rem', padding: '1rem' }}>
-                  Add To Cart - RM{(selectedProduct.price * qty).toFixed(2)}
+
+                {/* FIX: Disable Add to Cart if Out of Stock */}
+                <button
+                  onClick={() => addToCart(selectedProduct, qty)}
+                  className="add-btn"
+                  disabled={selectedProduct.stock === 0}
+                  style={{
+                    marginTop: '1rem',
+                    padding: '1rem',
+                    background: selectedProduct.stock === 0 ? '#cbd5e1' : '',
+                    cursor: selectedProduct.stock === 0 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {selectedProduct.stock === 0 ? 'Sold Out' : `Add To Cart - RM${(selectedProduct.price * qty).toFixed(2)}`}
                 </button>
               </div>
             </div>
@@ -268,6 +331,39 @@ function App() {
     );
   };
 
+  // --- ADMIN: UPDATE STOCK ---
+  const updateProductStock = async (productId, inputId) => {
+    // 1. Grab the value from the specific input box
+    const inputElement = document.getElementById(inputId);
+    const newStock = parseInt(inputElement.value);
+
+    // 2. Validation
+    if (isNaN(newStock) || newStock < 0) {
+      alert("Please enter a valid stock number");
+      return;
+    }
+
+    try {
+      // 3. Update Supabase
+      const { error } = await supabase
+        .from('products')
+        .update({ stock: newStock })
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      // 4. Show Notification (Ensure this line runs!)
+      setNotification(`Stock updated to ${newStock}!`);
+      setTimeout(() => setNotification(null), 3000);
+
+      // 5. Refresh Data
+      await fetchProducts();
+
+    } catch (error) {
+      alert("Error updating stock: " + error.message);
+    }
+  };
+
   // --- VIEWS ---
 
   // 1. CART VIEW
@@ -286,23 +382,23 @@ function App() {
                 {getGroupedCart().map((item) => (
                   <div key={item.id} className="cart-item">
                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                      
+
                       {/* 1. Quantity Bubble */}
                       <span style={{ fontWeight: 'bold', background: '#e2e8f0', minWidth: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>
                         {item.quantity}
                       </span>
 
                       {/* 2. NEW: Product Image */}
-                      <img 
-                        src={item.image_url} 
-                        alt={item.name} 
-                        style={{ width: '50px', height: '50px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #e2e8f0' }} 
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        style={{ width: '50px', height: '50px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #e2e8f0' }}
                       />
 
                       {/* 3. Product Name */}
                       <span style={{ fontWeight: '500' }}>{item.name}</span>
                     </div>
-                    
+
                     {/* Price */}
                     <span style={{ fontWeight: '600' }}>RM{(item.price * item.quantity).toFixed(2)}</span>
                   </div>
@@ -317,17 +413,18 @@ function App() {
               {session ? (
                 <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <h3>Shipping Details</h3>
-                  {/* CHANGED: Label to Username and removed @domain from display */}
-                  <label style={{fontWeight: 'bold', fontSize: '0.9rem'}}>Username</label>
+                  {/* LABEL: USERNAME */}
+                  <label style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>Name</label>
                   <input
-                    name="email" 
-                    className="input-field" 
-                    placeholder="Username" 
+                    name="username"
+                    className="input-field"
+                    placeholder="Name"
                     required
-                    // This splits the string at '@' and takes the first part [0]
-                    value={customerDetails.email ? customerDetails.email.split('@')[0] : ''}
+                    // NEW: Use full_name from Google metadata
+                    value={session.user.user_metadata.full_name || session.user.email}
                     onChange={handleInputChange}
-                    style={{  marginTop: '0.2rem' }}
+
+                    style={{ marginTop: '0.2rem' }}
                   />
                   <input name="phone" className="input-field" placeholder="Phone" onChange={handleInputChange} value={customerDetails.phone} required />
                   <textarea name="address" className="input-field" placeholder="Address" onChange={handleInputChange} value={customerDetails.address} required></textarea>
@@ -354,22 +451,22 @@ function App() {
                     <div><strong>Scan to Pay</strong><br /><span style={{ color: '#64748b', fontSize: '0.9rem' }}>Account Name: RAJA AHMAD SHUKRI BIN RAJA AHMAD KAHAR</span></div>
                   </div>
 
-{/* CUSTOM FILE UPLOAD */}
-<div className="file-upload-wrapper">
-  <label htmlFor="receipt-upload" className="file-upload-label">
-    <Upload size={18} />
-    {fileName ? fileName : "Upload Receipt"}
-  </label>
-  <input 
-    id="receipt-upload"
-    type="file" 
-    name="receipt" 
-    accept="image/*" 
-    required 
-    onChange={(e) => setFileName(e.target.files[0]?.name || "")}
-    style={{ display: 'none' }} // Hide the ugly default input
-  />
-</div>                  <button type="submit" className="checkout-btn" disabled={uploading}>{uploading ? 'Processing...' : 'Complete Order'} <Upload size={18} /></button>
+                  {/* CUSTOM FILE UPLOAD */}
+                  <div className="file-upload-wrapper">
+                    <label htmlFor="receipt-upload" className="file-upload-label">
+                      <Upload size={18} />
+                      {fileName ? fileName : "Upload Receipt"}
+                    </label>
+                    <input
+                      id="receipt-upload"
+                      type="file"
+                      name="receipt"
+                      accept="image/*"
+                      required
+                      onChange={(e) => setFileName(e.target.files[0]?.name || "")}
+                      style={{ display: 'none' }} // Hide the ugly default input
+                    />
+                  </div>                  <button type="submit" className="checkout-btn" disabled={uploading}>{uploading ? 'Processing...' : 'Complete Order'} <Upload size={18} /></button>
                 </form>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', gap: '1.5rem' }}>
@@ -430,7 +527,7 @@ function App() {
     );
   }
 
-  // 3. ADMIN VIEW
+// 3. ADMIN VIEW
   if (view === 'admin') {
     if (!session || session.user.email !== SELLER_EMAIL) {
       return (
@@ -499,19 +596,68 @@ function App() {
               </div>
               <div className="product-list-admin">
                 {products.map(p => (
-                  <div key={p.id} className="cart-item">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}><img src={p.image_url} style={{ width: '50px', height: '50px', borderRadius: '4px', objectFit: 'cover' }} /><div><strong>{p.name}</strong><div style={{ color: '#64748b' }}>RM{p.price}</div></div></div>
-                    <button onClick={() => deleteProduct(p.id)} className="icon-btn" style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2' }}><Trash2 size={16} /> Delete</button>
+                  <div key={p.id} className="cart-item" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                    
+                    {/* Image & Name */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <img src={p.image_url} alt={p.name} style={{ width: '50px', height: '50px', borderRadius: '4px', objectFit: 'cover' }} />
+                        <div>
+                            <strong>{p.name}</strong>
+                            <div style={{ color: '#64748b', fontSize: '0.9rem' }}>RM{p.price.toFixed(2)}</div>
+                        </div>
+                    </div>
+
+                    {/* Stock Control with SAVE BUTTON */}
+                    <div style={{display:'flex', alignItems:'flex-end', gap:'8px'}}>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <label style={{fontSize: '0.75rem', fontWeight:'bold', color: '#64748b', marginBottom:'2px'}}>Stock</label>
+                          <input 
+                              id={`stock-input-${p.id}`}
+                              type="number" 
+                              defaultValue={p.stock} 
+                              className="input-field"
+                              style={{ width: '60px', padding: '6px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                          />
+                        </div>
+
+                        {/* Blue Check Button */}
+                        <button 
+                          onClick={() => updateProductStock(p.id, `stock-input-${p.id}`)}
+                          className="icon-btn"
+                          title="Save Stock"
+                          style={{ background: '#dbeafe', color: '#2563eb', borderColor: '#bfdbfe', height: '38px', width: '38px', padding: 0, justifyContent: 'center' }}
+                        >
+                          <Check size={18} />
+                        </button>
+                        
+                        {/* Delete Button */}
+                        <button 
+                          onClick={() => deleteProduct(p.id)} 
+                          className="icon-btn" 
+                          style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2', height: '38px', width: '38px', padding: 0, justifyContent: 'center' }}
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    </div>
+
                   </div>
                 ))}
               </div>
             </div>
           )}
         </div>
+
+        {/* --- CRITICAL: NOTIFICATION TOAST ADDED HERE --- */}
+        {notification && (
+          <div className="notification-toast" style={{ background: '#22c55e' }}>
+             <Check size={16} /> {notification}
+          </div>
+        )}
+
       </div>
     );
   }
-
   // --- MAIN SHOP VIEW ---
   return (
     <div className="App">
@@ -526,8 +672,10 @@ function App() {
 
           {session && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {/* 1. NEW: Show Google Display Name */}
               <span className="user-email" style={{ fontSize: '0.9rem', fontWeight: '600', color: '#475569', marginRight: '5px' }}>
-                {session.user.email}
+                {/* Try to get full name, otherwise fallback to email */}
+                {session.user.user_metadata.full_name || session.user.email}
               </span>
 
               {session.user.email === SELLER_EMAIL && (
@@ -555,12 +703,32 @@ function App() {
         {loading ? <div className="loading"><Loader2 className="spin" /> Loading...</div> : (
           <div className="product-grid">
             {products.map((product) => (
-              <div key={product.id} className="card" onClick={() => { setSelectedProduct(product); setQty(1); }} style={{ cursor: 'pointer' }}>
+              <div key={product.id} className="card" onClick={() => { setSelectedProduct(product); setQty(1); }} style={{ cursor: 'pointer', opacity: product.stock === 0 ? 0.7 : 1 }}>
+
                 <img src={product.image_url} alt={product.name} className="card-img" />
+
                 <div className="card-body">
                   <h3>{product.name}</h3>
-                  <div className="sales-info"><span className="price">RM{product.price}</span>{soldCounts[product.id] > 0 && <span className="sold-badge">🔥 {soldCounts[product.id]} Sold</span>}</div>
-                  <button onClick={(e) => { e.stopPropagation(); addToCart(product); }} className="add-btn">Add to Cart</button>
+
+                  <div className="sales-info">
+                    <span className="price">RM{product.price}</span>
+
+                    {/* NEW: Stock Logic */}
+                    {product.stock === 0 ? (
+                      <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.9rem' }}>Out of Stock</span>
+                    ) : (
+                      <span style={{ color: '#64748b', fontSize: '0.85rem' }}>{product.stock} left</span>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={(e) => { e.stopPropagation(); addToCart(product); }}
+                    className="add-btn"
+                    disabled={product.stock === 0} // <--- Disable if 0
+                    style={{ background: product.stock === 0 ? '#cbd5e1' : '', cursor: product.stock === 0 ? 'not-allowed' : 'pointer' }}
+                  >
+                    {product.stock === 0 ? 'Sold Out' : 'Add to Cart'}
+                  </button>
                 </div>
               </div>
             ))}
