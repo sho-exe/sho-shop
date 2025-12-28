@@ -518,7 +518,7 @@ function App() {
           >
             {/* LOGO IMAGE */}
             <img
-              src={logo}
+              src="/shoshop.png"
               alt="ShoShop Logo"
               style={{
                 width: '40px',
@@ -577,7 +577,7 @@ function App() {
           {/* ADMIN LOGO SECTION */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.2rem', fontWeight: 'bold' }}>
             <img
-              src={logo}
+              src="/shoshop.png"
               alt="Logo"
               style={{ width: '35px', height: '35px', borderRadius: '6px' }}
             />
@@ -628,8 +628,57 @@ function App() {
                   <input placeholder="Name" className="input-field" required value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} />
                   <input type="number" placeholder="Price (RM)" className="input-field" required value={newProduct.price} onChange={e => setNewProduct({ ...newProduct, price: e.target.value })} />
                   <input placeholder="Desc" className="input-field" style={{ gridColumn: 'span 2' }} required value={newProduct.desc} onChange={e => setNewProduct({ ...newProduct, desc: e.target.value })} />
-                  <div style={{ gridColumn: 'span 2' }}><label>Image:</label><input type="file" name="image" accept="image/*" required style={{ width: '100%', marginTop: '5px' }} /></div>
-                  <button type="submit" className="add-btn" style={{ gridColumn: 'span 2' }} disabled={isAdding}>{isAdding ? 'Uploading...' : 'Create'} <Plus size={18} /></button>
+                  {/* Styled File Upload */}
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#64748b' }}>Product Image</label>
+
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="file"
+                        id="product-image-upload"
+                        name="image"
+                        accept="image/*"
+                        required
+                        style={{
+                          position: 'absolute',
+                          width: '1px',
+                          height: '1px',
+                          padding: 0,
+                          margin: -1,
+                          overflow: 'hidden',
+                          clip: 'rect(0,0,0,0)',
+                          border: 0
+                        }}
+                        onChange={(e) => {
+                          // Optional: update a state to show filename if you want
+                          const fileName = e.target.files[0]?.name;
+                          if (fileName) document.getElementById('file-name-display').textContent = fileName;
+                        }}
+                      />
+
+                      <label
+                        htmlFor="product-image-upload"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '10px',
+                          background: '#f8fafc',
+                          border: '2px dashed #cbd5e1',
+                          borderRadius: '8px',
+                          padding: '1rem',
+                          cursor: 'pointer',
+                          color: '#64748b',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.color = '#3b82f6'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#64748b'; }}
+                      >
+                        <Upload size={20} />
+                        <span id="file-name-display">Click to Upload Image</span>
+                      </label>
+                    </div>
+                  </div>                  <button type="submit" className="add-btn" style={{ gridColumn: 'span 2' }} disabled={isAdding}>{isAdding ? 'Uploading...' : 'Create'} <Plus size={18} /></button>
                 </form>
               </div>
               <div className="product-list-admin">
@@ -704,47 +753,47 @@ function App() {
         {/* Simple Navbar */}
         <nav className="navbar">
           <div className="logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/logo.png" alt="Logo" style={{ width: '40px', borderRadius: '8px' }} />
+            <img src="shoshop.png" alt="Logo" style={{ width: '40px', borderRadius: '8px' }} />
             ShoShop
           </div>
         </nav>
 
         {/* The Thank You Card */}
         <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-            <div className="card" style={{ padding: '3rem', textAlign: 'center', maxWidth: '500px', width: '100%' }}>
-                
-                {/* Big Green Checkmark */}
-                <div style={{ background: '#dcfce7', color: '#16a34a', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-                    <Check size={40} strokeWidth={3} />
-                </div>
+          <div className="card" style={{ padding: '3rem', textAlign: 'center', maxWidth: '500px', width: '100%' }}>
 
-                <h1 style={{ marginBottom: '0.5rem' }}>Order Completed!</h1>
-                
-                <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '1.1rem' }}>
-                    Thank you, <strong>{session.user.user_metadata.full_name || "Guest"}</strong>! <br/>
-                    Your order has been received and is being processed.
-                </p>
-
-                {/* THE PONG GAME SECTION */}
-                <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
-                    <p style={{ marginBottom: '1rem', fontWeight: 'bold', color: '#334155' }}>While you wait, why not play a game?</p>
-                    <button 
-                        onClick={() => setShowGame(true)} 
-                        className="add-btn" 
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#8b5cf6' }}
-                    >
-                        <Gamepad2 size={20} /> Play Pong
-                    </button>
-                </div>
-
-                {/* Return to Shop Link */}
-                <button 
-                    onClick={() => setView('shop')} 
-                    style={{ background: 'none', border: 'none', color: '#64748b', textDecoration: 'underline', cursor: 'pointer' }}
-                >
-                    Return to Store
-                </button>
+            {/* Big Green Checkmark */}
+            <div style={{ background: '#dcfce7', color: '#16a34a', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <Check size={40} strokeWidth={3} />
             </div>
+
+            <h1 style={{ marginBottom: '0.5rem' }}>Order Completed!</h1>
+
+            <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '1.1rem' }}>
+              Thank you, <strong>{session.user.user_metadata.full_name || "Guest"}</strong>! <br />
+              Your order has been received and is being processed.
+            </p>
+
+            {/* THE PONG GAME SECTION */}
+            <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+              <p style={{ marginBottom: '1rem', fontWeight: 'bold', color: '#334155' }}>While you wait, why not play a game?</p>
+              <button
+                onClick={() => setShowGame(true)}
+                className="add-btn"
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#8b5cf6' }}
+              >
+                <Gamepad2 size={20} /> Play Pong
+              </button>
+            </div>
+
+            {/* Return to Shop Link */}
+            <button
+              onClick={() => setView('shop')}
+              style={{ background: 'none', border: 'none', color: '#64748b', textDecoration: 'underline', cursor: 'pointer' }}
+            >
+              Return to Store
+            </button>
+          </div>
         </div>
 
         {/* Ensure the Game Popup can open here */}
@@ -778,21 +827,16 @@ function App() {
             }}
           />
           ShoShop
-        </div>        <div className="nav-actions">
+        </div>
+        <div className="nav-actions">
           {/* NEW: Minigame Button */}
-             <button 
-               className="icon-btn" 
-               onClick={() => setShowGame(true)}
-               title="Play Minigame"
-               style={{ background: '#f1f5f9', color: '#64748b' }}
-             >
-                <Gamepad2 size={20} />
-             </button>
+
           {!session && (
             <button className="icon-btn" onClick={handleGoogleLogin}>
               <User size={18} /> Login
             </button>
           )}
+
 
           {session && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -817,6 +861,15 @@ function App() {
               </button>
             </div>
           )}
+
+                    <button
+            className="icon-btn"
+            onClick={() => setShowGame(true)}
+            title="Play Minigame"
+            style={{ background: '#f1f5f9', color: '#64748b' }}
+          >
+            <Gamepad2 size={20} />
+          </button>
 
           <button className="icon-btn" onClick={handleOpenCart}>
             <ShoppingBag size={18} /> <span>Cart ({cart.length})</span>
@@ -864,8 +917,10 @@ function App() {
 
       {/* Zoom Helper Component rendered here as well */}
       {renderQRZoom()}
+
+      <Footer />
       {/* RENDER GAME IF ACTIVE */}
-        {showGame && <PongGame onClose={() => setShowGame(false)} />}
+      {showGame && <PongGame onClose={() => setShowGame(false)} />}
     </div>
   );
 }
@@ -874,14 +929,14 @@ function App() {
 const PongGame = ({ onClose }) => {
   const canvasRef = useRef(null);
   const requestRef = useRef();
-  
+
   // Game States
   const [score, setScore] = useState({ player: 0, computer: 0 });
   const [gameStatus, setGameStatus] = useState('waiting'); // 'waiting', 'playing', 'ended'
   const [winner, setWinner] = useState(null);
 
   // Game Variables (Refs for performance)
-  const gameStateRef = useRef({ 
+  const gameStateRef = useRef({
     ball: { x: 300, y: 200, dx: 3, dy: 3, radius: 9 },
     player: { x: 10, y: 150, width: 10, height: 100 },
     computer: { x: 580, y: 150, width: 10, height: 80 },
@@ -893,7 +948,7 @@ const PongGame = ({ onClose }) => {
     setGameStatus('playing');
     setWinner(null);
     gameStateRef.current.isPlaying = true;
-    
+
     // Reset positions
     gameStateRef.current.ball = { x: 300, y: 200, dx: 3, dy: 3, radius: 9 };
     gameStateRef.current.player.y = 150;
@@ -904,7 +959,7 @@ const PongGame = ({ onClose }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    
+
     const update = () => {
       if (!gameStateRef.current.isPlaying) return;
 
@@ -920,7 +975,7 @@ const PongGame = ({ onClose }) => {
 
       // Computer AI
       let targetY = ball.y - (computer.height / 2);
-      if (computer.y < targetY) computer.y += 2.5; 
+      if (computer.y < targetY) computer.y += 2.5;
       else computer.y -= 2.5;
 
       // Clamp paddles
@@ -933,7 +988,7 @@ const PongGame = ({ onClose }) => {
         ball.y > player.y &&
         ball.y < player.y + player.height
       ) {
-        ball.dx = Math.abs(ball.dx); 
+        ball.dx = Math.abs(ball.dx);
       }
 
       if (
@@ -970,14 +1025,14 @@ const PongGame = ({ onClose }) => {
       const ball = gameStateRef.current.ball;
       ball.x = canvas.width / 2;
       ball.y = canvas.height / 2;
-      ball.dx = 3 * (Math.random() > 0.5 ? 1 : -1); 
+      ball.dx = 3 * (Math.random() > 0.5 ? 1 : -1);
       ball.dy = 3 * (Math.random() > 0.5 ? 1 : -1);
     };
 
     const draw = () => {
-      ctx.fillStyle = '#1e293b'; 
+      ctx.fillStyle = '#1e293b';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       // Center Line
       ctx.setLineDash([10, 10]);
       ctx.beginPath();
@@ -1011,26 +1066,26 @@ const PongGame = ({ onClose }) => {
     const handleMouseMove = (e) => {
       const rect = canvas.getBoundingClientRect();
       if (gameStateRef.current.isPlaying) {
-         gameStateRef.current.player.y = e.clientY - rect.top - (gameStateRef.current.player.height / 2);
+        gameStateRef.current.player.y = e.clientY - rect.top - (gameStateRef.current.player.height / 2);
       }
     };
 
     // 2. Touch Control (New!)
     const handleTouchMove = (e) => {
       // Prevent scrolling the page while playing
-      e.preventDefault(); 
+      e.preventDefault();
       const rect = canvas.getBoundingClientRect();
       const touch = e.touches[0]; // Get the first finger
-      
+
       if (gameStateRef.current.isPlaying) {
-         gameStateRef.current.player.y = touch.clientY - rect.top - (gameStateRef.current.player.height / 2);
+        gameStateRef.current.player.y = touch.clientY - rect.top - (gameStateRef.current.player.height / 2);
       }
     };
 
     canvas.addEventListener('mousemove', handleMouseMove);
     // Add touch listener with { passive: false } to allow preventDefault()
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    
+
     requestRef.current = requestAnimationFrame(gameLoop);
 
     return () => {
@@ -1043,59 +1098,83 @@ const PongGame = ({ onClose }) => {
   return (
     <div className="modal-overlay" style={{ backdropFilter: 'blur(5px)', zIndex: 9999 }}>
       <div className="modal" style={{ width: '95%', maxWidth: '650px', background: '#0f172a', border: '2px solid #334155', color: 'white', padding: '15px', position: 'relative' }}>
-        
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
-          <h3 style={{margin:0, color: '#38bdf8'}}>🏓 Pong</h3>
+          <h3 style={{ margin: 0, color: '#38bdf8' }}>🏓 Pong</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
         </div>
-        
+
         {/* Scoreboard */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '10px', fontFamily: 'monospace' }}>
-            <div style={{ color: '#4ade80' }}>YOU: {score.player}</div>
-            <div style={{ color: '#f472b6' }}>CPU: {score.computer}</div>
+          <div style={{ color: '#4ade80' }}>YOU: {score.player}</div>
+          <div style={{ color: '#f472b6' }}>CPU: {score.computer}</div>
         </div>
 
         {/* Game Container - Responsive Height */}
         <div style={{ position: 'relative', width: '100%', aspectRatio: '3/2' }}>
-            <canvas 
-              ref={canvasRef} 
-              width={600} 
-              height={400} 
-              style={{ 
-                background: '#1e293b', 
-                borderRadius: '8px', 
-                cursor: gameStatus === 'playing' ? 'none' : 'default', 
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
-                width: '100%',
-                height: '100%',
-                touchAction: 'none' // Helps prevent browser gestures
-              }}
-            />
+          <canvas
+            ref={canvasRef}
+            width={600}
+            height={400}
+            style={{
+              background: '#1e293b',
+              borderRadius: '8px',
+              cursor: gameStatus === 'playing' ? 'none' : 'default',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+              width: '100%',
+              height: '100%',
+              touchAction: 'none' // Helps prevent browser gestures
+            }}
+          />
 
-            {/* START SCREEN */}
-            {gameStatus === 'waiting' && (
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.8)', borderRadius: '8px' }}>
-                    <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Ready?</h2>
-                    <button onClick={startGame} className="add-btn" style={{ fontSize: '1.2rem', padding: '10px 30px', background: '#22c55e', color: 'white' }}>START</button>
-                </div>
-            )}
+          {/* START SCREEN */}
+          {gameStatus === 'waiting' && (
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.8)', borderRadius: '8px' }}>
+              <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Ready?</h2>
+              <button onClick={startGame} className="add-btn" style={{ fontSize: '1.2rem', padding: '10px 30px', background: '#22c55e', color: 'white' }}>START</button>
+            </div>
+          )}
 
-            {/* GAME OVER SCREEN */}
-            {gameStatus === 'ended' && (
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)', borderRadius: '8px' }}>
-                    <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: winner.includes('WIN') ? '#4ade80' : '#ef4444' }}>{winner}</h2>
-                    <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '1.5rem' }}>Final Score: {score.player} - {score.computer}</div>
-                    <button onClick={startGame} className="add-btn" style={{ fontSize: '1rem', padding: '10px 25px' }}>Play Again</button>
-                </div>
-            )}
+          {/* GAME OVER SCREEN */}
+          {gameStatus === 'ended' && (
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)', borderRadius: '8px' }}>
+              <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: winner.includes('WIN') ? '#4ade80' : '#ef4444' }}>{winner}</h2>
+              <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '1.5rem' }}>Final Score: {score.player} - {score.computer}</div>
+              <button onClick={startGame} className="add-btn" style={{ fontSize: '1rem', padding: '10px 25px' }}>Play Again</button>
+            </div>
+          )}
         </div>
 
         <p style={{ textAlign: 'center', marginTop: '10px', color: '#94a3b8', fontSize: '0.8rem' }}>
-            Drag inside the box to move. First to 10 wins!
+          Drag inside the box to move. First to 10 wins!
         </p>
       </div>
     </div>
+  );
+};
+
+// --- FOOTER COMPONENT ---
+const Footer = () => {
+  return (
+    <footer style={{ 
+      background: '#1e293b', 
+      color: '#94a3b8', 
+      padding: '2rem 1rem', 
+      textAlign: 'center', 
+      marginTop: '4rem',
+      borderTop: '1px solid #334155'
+    }}>
+      <div style={{ marginBottom: '10px', fontWeight: 'bold', color: 'white', display:'flex', justifyContent:'center', alignItems:'center', gap:'8px' }}>
+        {/* You can reuse your logo here if you want */}
+        <img src="/shoshop.png" alt="Logo" style={{ width: '24px', borderRadius: '4px' }} />
+        ShoShop
+      </div>
+      <p style={{ fontSize: '0.85rem', margin: 0 }}>
+        &copy; {new Date().getFullYear()} All rights reserved. 
+        <br/> Made with ❤️ for our customers.
+      </p>
+    </footer>
   );
 };
 export default App;
