@@ -870,7 +870,7 @@ function App() {
   );
 }
 
-// --- MINIGAME COMPONENT (WITH START & WIN CONDITION) ---
+// --- MINIGAME COMPONENT (MOBILE COMPATIBLE) ---
 const PongGame = ({ onClose }) => {
   const canvasRef = useRef(null);
   const requestRef = useRef();
@@ -880,7 +880,7 @@ const PongGame = ({ onClose }) => {
   const [gameStatus, setGameStatus] = useState('waiting'); // 'waiting', 'playing', 'ended'
   const [winner, setWinner] = useState(null);
 
-  // We use refs for game variables so they persist inside the loop without dependency issues
+  // Game Variables (Refs for performance)
   const gameStateRef = useRef({ 
     ball: { x: 300, y: 200, dx: 3, dy: 3, radius: 9 },
     player: { x: 10, y: 150, width: 10, height: 100 },
@@ -888,7 +888,6 @@ const PongGame = ({ onClose }) => {
     isPlaying: false
   });
 
-  // Function to start the game
   const startGame = () => {
     setScore({ player: 0, computer: 0 });
     setGameStatus('playing');
@@ -907,7 +906,6 @@ const PongGame = ({ onClose }) => {
     const ctx = canvas.getContext('2d');
     
     const update = () => {
-      // Only move things if the game is playing
       if (!gameStateRef.current.isPlaying) return;
 
       const state = gameStateRef.current;
@@ -948,11 +946,9 @@ const PongGame = ({ onClose }) => {
 
       // Scoring
       if (ball.x < 0) {
-        // Computer Scored
         handleScore('computer');
         resetBall();
       } else if (ball.x > canvas.width) {
-        // Player Scored
         handleScore('player');
         resetBall();
       }
@@ -961,8 +957,6 @@ const PongGame = ({ onClose }) => {
     const handleScore = (who) => {
       setScore(prev => {
         const newScore = { ...prev, [who]: prev[who] + 1 };
-        
-        // CHECK WIN CONDITION (10 Points)
         if (newScore[who] >= 10) {
           gameStateRef.current.isPlaying = false;
           setGameStatus('ended');
@@ -995,13 +989,11 @@ const PongGame = ({ onClose }) => {
 
       const { ball, player, computer } = gameStateRef.current;
 
-      // Ball
       ctx.fillStyle = '#22c55e';
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Paddles
       ctx.fillStyle = '#f8fafc';
       ctx.fillRect(player.x, player.y, player.width, player.height);
       ctx.fillRect(computer.x, computer.y, computer.width, computer.height);
@@ -1013,41 +1005,59 @@ const PongGame = ({ onClose }) => {
       requestRef.current = requestAnimationFrame(gameLoop);
     };
 
+    // --- CONTROLS ---
+
+    // 1. Mouse Control
     const handleMouseMove = (e) => {
       const rect = canvas.getBoundingClientRect();
-      // Directly update the ref so movement is smooth even if React doesn't re-render
       if (gameStateRef.current.isPlaying) {
          gameStateRef.current.player.y = e.clientY - rect.top - (gameStateRef.current.player.height / 2);
       }
     };
 
+    // 2. Touch Control (New!)
+    const handleTouchMove = (e) => {
+      // Prevent scrolling the page while playing
+      e.preventDefault(); 
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0]; // Get the first finger
+      
+      if (gameStateRef.current.isPlaying) {
+         gameStateRef.current.player.y = touch.clientY - rect.top - (gameStateRef.current.player.height / 2);
+      }
+    };
+
     canvas.addEventListener('mousemove', handleMouseMove);
+    // Add touch listener with { passive: false } to allow preventDefault()
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    
     requestRef.current = requestAnimationFrame(gameLoop);
 
     return () => {
       cancelAnimationFrame(requestRef.current);
       canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('touchmove', handleTouchMove);
     };
-  }, []); // Run once on mount
+  }, []);
 
   return (
     <div className="modal-overlay" style={{ backdropFilter: 'blur(5px)', zIndex: 9999 }}>
-      <div className="modal" style={{ width: 'auto', background: '#0f172a', border: '2px solid #334155', color: 'white', padding: '20px', position: 'relative' }}>
+      <div className="modal" style={{ width: '95%', maxWidth: '650px', background: '#0f172a', border: '2px solid #334155', color: 'white', padding: '15px', position: 'relative' }}>
         
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
-          <h3 style={{margin:0, color: '#38bdf8'}}>🏓 Pong (First to 10)</h3>
+          <h3 style={{margin:0, color: '#38bdf8'}}>🏓 Pong</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
         </div>
         
         {/* Scoreboard */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '3rem', fontSize: '2rem', fontWeight: 'bold', marginBottom: '15px', fontFamily: 'monospace' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '10px', fontFamily: 'monospace' }}>
             <div style={{ color: '#4ade80' }}>YOU: {score.player}</div>
             <div style={{ color: '#f472b6' }}>CPU: {score.computer}</div>
         </div>
 
-        {/* Game Container */}
-        <div style={{ position: 'relative', width: '600px', height: '400px' }}>
+        {/* Game Container - Responsive Height */}
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '3/2' }}>
             <canvas 
               ref={canvasRef} 
               width={600} 
@@ -1058,46 +1068,31 @@ const PongGame = ({ onClose }) => {
                 cursor: gameStatus === 'playing' ? 'none' : 'default', 
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
                 width: '100%',
-                height: '100%'
+                height: '100%',
+                touchAction: 'none' // Helps prevent browser gestures
               }}
             />
 
-            {/* OVERLAY: START SCREEN */}
+            {/* START SCREEN */}
             {gameStatus === 'waiting' && (
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.8)', borderRadius: '8px' }}>
-                    <h2 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Ready?</h2>
-                    <button 
-                        onClick={startGame}
-                        className="add-btn" 
-                        style={{ fontSize: '1.5rem', padding: '10px 40px', background: '#22c55e', color: 'white' }}
-                    >
-                        START GAME
-                    </button>
+                    <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Ready?</h2>
+                    <button onClick={startGame} className="add-btn" style={{ fontSize: '1.2rem', padding: '10px 30px', background: '#22c55e', color: 'white' }}>START</button>
                 </div>
             )}
 
-            {/* OVERLAY: GAME OVER SCREEN */}
+            {/* GAME OVER SCREEN */}
             {gameStatus === 'ended' && (
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)', borderRadius: '8px' }}>
-                    <h2 style={{ fontSize: '3rem', marginBottom: '1rem', color: winner.includes('WIN') ? '#4ade80' : '#ef4444' }}>
-                        {winner}
-                    </h2>
-                    <div style={{ fontSize: '1.2rem', color: '#94a3b8', marginBottom: '2rem' }}>
-                        Final Score: {score.player} - {score.computer}
-                    </div>
-                    <button 
-                        onClick={startGame}
-                        className="add-btn" 
-                        style={{ fontSize: '1.2rem', padding: '10px 30px' }}
-                    >
-                        Play Again
-                    </button>
+                    <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: winner.includes('WIN') ? '#4ade80' : '#ef4444' }}>{winner}</h2>
+                    <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '1.5rem' }}>Final Score: {score.player} - {score.computer}</div>
+                    <button onClick={startGame} className="add-btn" style={{ fontSize: '1rem', padding: '10px 25px' }}>Play Again</button>
                 </div>
             )}
         </div>
 
-        <p style={{ textAlign: 'center', marginTop: '15px', color: '#94a3b8', fontSize: '0.9rem' }}>
-            Use your mouse to move the paddle. First to 10 wins!
+        <p style={{ textAlign: 'center', marginTop: '10px', color: '#94a3b8', fontSize: '0.8rem' }}>
+            Drag inside the box to move. First to 10 wins!
         </p>
       </div>
     </div>
