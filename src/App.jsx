@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from './supabaseClient';
-import { ShoppingBag, X, Upload, ShieldCheck, Check, Loader2, Trash2, Plus, Package, LogOut, User, History } from 'lucide-react';
+import { ShoppingBag, X, Upload, ShieldCheck, Check, Loader2, Trash2, Plus, Package, LogOut, User, History, Gamepad2 } from 'lucide-react';
 import './index.css';
 
 
@@ -8,6 +8,10 @@ import './index.css';
 const SELLER_EMAIL = 'shukriraja10@gmail.com';
 
 function App() {
+
+  const [showGame, setShowGame] = useState(false);
+
+
   // --- STATE ---
   const [view, setView] = useState('shop'); // 'shop', 'cart', 'admin', 'customer_orders'
   const [products, setProducts] = useState([]);
@@ -196,11 +200,11 @@ function App() {
       }
 
       // 4. Cleanup
-      setNotification("Order sent! Stock updated.");
+      setNotification("Order sent!");
       setTimeout(() => setNotification(null), 3000);
       setCart([]);
       setCustomerDetails(prev => ({ ...prev, address: '', phone: '' }));
-      setView('shop');
+      setView('success');
 
       // Refresh data so we see the new stock levels immediately
       fetchProducts();
@@ -692,6 +696,62 @@ function App() {
       </div>
     );
   }
+
+  // 4. ORDER SUCCESS VIEW
+  if (view === 'success') {
+    return (
+      <div className="App">
+        {/* Simple Navbar */}
+        <nav className="navbar">
+          <div className="logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/logo.png" alt="Logo" style={{ width: '40px', borderRadius: '8px' }} />
+            ShoShop
+          </div>
+        </nav>
+
+        {/* The Thank You Card */}
+        <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+            <div className="card" style={{ padding: '3rem', textAlign: 'center', maxWidth: '500px', width: '100%' }}>
+                
+                {/* Big Green Checkmark */}
+                <div style={{ background: '#dcfce7', color: '#16a34a', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                    <Check size={40} strokeWidth={3} />
+                </div>
+
+                <h1 style={{ marginBottom: '0.5rem' }}>Order Completed!</h1>
+                
+                <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '1.1rem' }}>
+                    Thank you, <strong>{session.user.user_metadata.full_name || "Guest"}</strong>! <br/>
+                    Your order has been received and is being processed.
+                </p>
+
+                {/* THE PONG GAME SECTION */}
+                <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+                    <p style={{ marginBottom: '1rem', fontWeight: 'bold', color: '#334155' }}>While you wait, why not play a game?</p>
+                    <button 
+                        onClick={() => setShowGame(true)} 
+                        className="add-btn" 
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: '#8b5cf6' }}
+                    >
+                        <Gamepad2 size={20} /> Play Pong
+                    </button>
+                </div>
+
+                {/* Return to Shop Link */}
+                <button 
+                    onClick={() => setView('shop')} 
+                    style={{ background: 'none', border: 'none', color: '#64748b', textDecoration: 'underline', cursor: 'pointer' }}
+                >
+                    Return to Store
+                </button>
+            </div>
+        </div>
+
+        {/* Ensure the Game Popup can open here */}
+        {showGame && <PongGame onClose={() => setShowGame(false)} />}
+      </div>
+    );
+  }
   // --- MAIN SHOP VIEW ---
   return (
     <div className="App">
@@ -719,6 +779,15 @@ function App() {
           />
           ShoShop
         </div>        <div className="nav-actions">
+          {/* NEW: Minigame Button */}
+             <button 
+               className="icon-btn" 
+               onClick={() => setShowGame(true)}
+               title="Play Minigame"
+               style={{ background: '#f1f5f9', color: '#64748b' }}
+             >
+                <Gamepad2 size={20} />
+             </button>
           {!session && (
             <button className="icon-btn" onClick={handleGoogleLogin}>
               <User size={18} /> Login
@@ -795,8 +864,243 @@ function App() {
 
       {/* Zoom Helper Component rendered here as well */}
       {renderQRZoom()}
+      {/* RENDER GAME IF ACTIVE */}
+        {showGame && <PongGame onClose={() => setShowGame(false)} />}
     </div>
   );
 }
 
+// --- MINIGAME COMPONENT (WITH START & WIN CONDITION) ---
+const PongGame = ({ onClose }) => {
+  const canvasRef = useRef(null);
+  const requestRef = useRef();
+  
+  // Game States
+  const [score, setScore] = useState({ player: 0, computer: 0 });
+  const [gameStatus, setGameStatus] = useState('waiting'); // 'waiting', 'playing', 'ended'
+  const [winner, setWinner] = useState(null);
+
+  // We use refs for game variables so they persist inside the loop without dependency issues
+  const gameStateRef = useRef({ 
+    ball: { x: 300, y: 200, dx: 3, dy: 3, radius: 9 },
+    player: { x: 10, y: 150, width: 10, height: 100 },
+    computer: { x: 580, y: 150, width: 10, height: 80 },
+    isPlaying: false
+  });
+
+  // Function to start the game
+  const startGame = () => {
+    setScore({ player: 0, computer: 0 });
+    setGameStatus('playing');
+    setWinner(null);
+    gameStateRef.current.isPlaying = true;
+    
+    // Reset positions
+    gameStateRef.current.ball = { x: 300, y: 200, dx: 3, dy: 3, radius: 9 };
+    gameStateRef.current.player.y = 150;
+    gameStateRef.current.computer.y = 150;
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const update = () => {
+      // Only move things if the game is playing
+      if (!gameStateRef.current.isPlaying) return;
+
+      const state = gameStateRef.current;
+      const { ball, player, computer } = state;
+
+      // Move Ball
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      // Bounce Top/Bottom
+      if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy *= -1;
+
+      // Computer AI
+      let targetY = ball.y - (computer.height / 2);
+      if (computer.y < targetY) computer.y += 2.5; 
+      else computer.y -= 2.5;
+
+      // Clamp paddles
+      player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+      computer.y = Math.max(0, Math.min(canvas.height - computer.height, computer.y));
+
+      // Collisions
+      if (
+        ball.x - ball.radius < player.x + player.width &&
+        ball.y > player.y &&
+        ball.y < player.y + player.height
+      ) {
+        ball.dx = Math.abs(ball.dx); 
+      }
+
+      if (
+        ball.x + ball.radius > computer.x &&
+        ball.y > computer.y &&
+        ball.y < computer.y + computer.height
+      ) {
+        ball.dx = -Math.abs(ball.dx);
+      }
+
+      // Scoring
+      if (ball.x < 0) {
+        // Computer Scored
+        handleScore('computer');
+        resetBall();
+      } else if (ball.x > canvas.width) {
+        // Player Scored
+        handleScore('player');
+        resetBall();
+      }
+    };
+
+    const handleScore = (who) => {
+      setScore(prev => {
+        const newScore = { ...prev, [who]: prev[who] + 1 };
+        
+        // CHECK WIN CONDITION (10 Points)
+        if (newScore[who] >= 10) {
+          gameStateRef.current.isPlaying = false;
+          setGameStatus('ended');
+          setWinner(who === 'player' ? 'YOU WIN!' : 'GAME OVER');
+        }
+        return newScore;
+      });
+    };
+
+    const resetBall = () => {
+      const ball = gameStateRef.current.ball;
+      ball.x = canvas.width / 2;
+      ball.y = canvas.height / 2;
+      ball.dx = 3 * (Math.random() > 0.5 ? 1 : -1); 
+      ball.dy = 3 * (Math.random() > 0.5 ? 1 : -1);
+    };
+
+    const draw = () => {
+      ctx.fillStyle = '#1e293b'; 
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Center Line
+      ctx.setLineDash([10, 10]);
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.strokeStyle = '#475569';
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const { ball, player, computer } = gameStateRef.current;
+
+      // Ball
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Paddles
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+      ctx.fillRect(computer.x, computer.y, computer.width, computer.height);
+    };
+
+    const gameLoop = () => {
+      update();
+      draw();
+      requestRef.current = requestAnimationFrame(gameLoop);
+    };
+
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      // Directly update the ref so movement is smooth even if React doesn't re-render
+      if (gameStateRef.current.isPlaying) {
+         gameStateRef.current.player.y = e.clientY - rect.top - (gameStateRef.current.player.height / 2);
+      }
+    };
+
+    canvas.addEventListener('mousemove', handleMouseMove);
+    requestRef.current = requestAnimationFrame(gameLoop);
+
+    return () => {
+      cancelAnimationFrame(requestRef.current);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []); // Run once on mount
+
+  return (
+    <div className="modal-overlay" style={{ backdropFilter: 'blur(5px)', zIndex: 9999 }}>
+      <div className="modal" style={{ width: 'auto', background: '#0f172a', border: '2px solid #334155', color: 'white', padding: '20px', position: 'relative' }}>
+        
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
+          <h3 style={{margin:0, color: '#38bdf8'}}>🏓 Pong (First to 10)</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
+        </div>
+        
+        {/* Scoreboard */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '3rem', fontSize: '2rem', fontWeight: 'bold', marginBottom: '15px', fontFamily: 'monospace' }}>
+            <div style={{ color: '#4ade80' }}>YOU: {score.player}</div>
+            <div style={{ color: '#f472b6' }}>CPU: {score.computer}</div>
+        </div>
+
+        {/* Game Container */}
+        <div style={{ position: 'relative', width: '600px', height: '400px' }}>
+            <canvas 
+              ref={canvasRef} 
+              width={600} 
+              height={400} 
+              style={{ 
+                background: '#1e293b', 
+                borderRadius: '8px', 
+                cursor: gameStatus === 'playing' ? 'none' : 'default', 
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+                width: '100%',
+                height: '100%'
+              }}
+            />
+
+            {/* OVERLAY: START SCREEN */}
+            {gameStatus === 'waiting' && (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.8)', borderRadius: '8px' }}>
+                    <h2 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Ready?</h2>
+                    <button 
+                        onClick={startGame}
+                        className="add-btn" 
+                        style={{ fontSize: '1.5rem', padding: '10px 40px', background: '#22c55e', color: 'white' }}
+                    >
+                        START GAME
+                    </button>
+                </div>
+            )}
+
+            {/* OVERLAY: GAME OVER SCREEN */}
+            {gameStatus === 'ended' && (
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.9)', borderRadius: '8px' }}>
+                    <h2 style={{ fontSize: '3rem', marginBottom: '1rem', color: winner.includes('WIN') ? '#4ade80' : '#ef4444' }}>
+                        {winner}
+                    </h2>
+                    <div style={{ fontSize: '1.2rem', color: '#94a3b8', marginBottom: '2rem' }}>
+                        Final Score: {score.player} - {score.computer}
+                    </div>
+                    <button 
+                        onClick={startGame}
+                        className="add-btn" 
+                        style={{ fontSize: '1.2rem', padding: '10px 30px' }}
+                    >
+                        Play Again
+                    </button>
+                </div>
+            )}
+        </div>
+
+        <p style={{ textAlign: 'center', marginTop: '15px', color: '#94a3b8', fontSize: '0.9rem' }}>
+            Use your mouse to move the paddle. First to 10 wins!
+        </p>
+      </div>
+    </div>
+  );
+};
 export default App;
